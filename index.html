@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PandaPanda AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* 自定義滾動條 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* Markdown 樣式微調 */
+        .markdown-body p { margin-bottom: 0.75em; }
+        .markdown-body ul { list-style-type: disc; margin-left: 1.5em; margin-bottom: 0.75em; }
+        .markdown-body ol { list-style-type: decimal; margin-left: 1.5em; margin-bottom: 0.75em; }
+        .markdown-body code { 
+            background-color: rgba(0,0,0,0.05); 
+            padding: 0.2em 0.4em; 
+            border-radius: 0.25em; 
+            font-family: monospace; 
+        }
+        .dark .markdown-body code {
+            background-color: rgba(255,255,255,0.1); 
+        }
+        .markdown-body pre { 
+            background-color: #1f2937; 
+            color: #f3f4f6; 
+            padding: 1em; 
+            border-radius: 0.5em; 
+            overflow-x: auto; 
+            margin-bottom: 1em; 
+        }
+        
+        /* 下拉選單樣式 */
+        .custom-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+        .dark .custom-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        }
+
+        /* Modal 動畫 */
+        .modal-enter { opacity: 0; transform: scale(0.95); }
+        .modal-enter-active { opacity: 1; transform: scale(1); transition: opacity 200ms, transform 200ms; }
+        .modal-exit { opacity: 1; transform: scale(1); }
+        .modal-exit-active { opacity: 0; transform: scale(0.95); transition: opacity 200ms, transform 200ms; }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 h-screen flex flex-col font-sans text-gray-800 dark:text-gray-100 transition-colors duration-300">
+
+    <!-- 頂部導航欄 -->
+    <header class="bg-white dark:bg-gray-800 shadow-sm z-10 transition-colors duration-300">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="relative group cursor-pointer transition-transform hover:scale-105">
+                    <img 
+                        src="https://lh3.googleusercontent.com/a/ACg8ocK0Sd79qNlGdQiGKEoKfuQxqHiVCHuyH4Sw5qFkJfpy4K_J23I=s288-c-no" 
+                        alt="Panda Logo" 
+                        class="w-10 h-10 rounded-full border-2 border-green-500 object-cover shadow-sm"
+                        onerror="this.onerror=null; this.src='https://api.iconify.design/noto:panda.svg';"
+                    >
+                    <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-gray-800 dark:text-white tracking-tight">PandaPanda AI</h1>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">您的智慧熊貓助手</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <!-- 模式選擇器 -->
+                <div class="relative hidden md:block">
+                    <select id="mode-select" class="custom-select bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-2.5 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                        <option value="quick">⚡ 快速回答</option>
+                        <option value="pro">🧠 Pro 模式</option>
+                    </select>
+                </div>
+
+                <button onclick="openSettings()" class="p-2 text-gray-400 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" title="設定">
+                    <i class="fas fa-cog"></i>
+                </button>
+
+                <button onclick="clearChat()" class="p-2 text-gray-400 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" title="清除對話">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 聊天區域 -->
+    <main id="chat-container" class="flex-1 overflow-y-auto p-4 scroll-smooth">
+        <div class="max-w-4xl mx-auto space-y-6 pb-4">
+            <!-- 歡迎訊息 (靜態顯示，不存入對話紀錄) -->
+            <div id="welcome-message" class="flex gap-4 items-start fade-in hidden">
+                <img 
+                    src="https://lh3.googleusercontent.com/a/ACg8ocK0Sd79qNlGdQiGKEoKfuQxqHiVCHuyH4Sw5qFkJfpy4K_J23I=s288-c-no" 
+                    class="w-8 h-8 rounded-full border border-gray-200 dark:border-gray-600 flex-shrink-0"
+                    onerror="this.onerror=null; this.src='https://api.iconify.design/noto:panda.svg';"
+                >
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl rounded-tl-none shadow-sm border border-gray-100 dark:border-gray-700 max-w-[85%]">
+                    <p class="text-gray-700 dark:text-gray-200 leading-relaxed">
+                        <span style="color: #16a34a; font-weight: bold;">#16a34a 哈囉！很高興認識你！👋</span><br>
+                        我是 <span class="font-bold">PandaPanda AI</span> 🐼<br>
+                        準備好竹筍了嗎？🎋 請先在右上角的「設定」輸入 API Key 就可以開始聊天囉！
+                    </p>
+                </div>
+            </div>
+            
+            <!-- 動態對話內容容器 -->
+            <div id="chat-history-container"></div>
+        </div>
+    </main>
+
+    <!-- 輸入區域 -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 transition-colors duration-300">
+        <div class="max-w-4xl mx-auto relative">
+            <div class="relative flex items-end gap-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-2xl px-4 py-3 focus-within:ring-2 focus-within:ring-green-500 focus-within:border-transparent focus-within:bg-white dark:focus-within:bg-gray-700 transition-all shadow-sm">
+                <textarea 
+                    id="user-input" 
+                    rows="1" 
+                    placeholder="發送訊息給 PandaPanda..." 
+                    class="w-full bg-transparent border-none focus:ring-0 resize-none max-h-32 text-gray-700 dark:text-gray-100 placeholder-gray-400 leading-relaxed py-1"
+                    oninput="autoResize(this)"
+                    onkeydown="handleKeyDown(event)"
+                ></textarea>
+                <button 
+                    id="send-btn" 
+                    onclick="handleSend()" 
+                    class="bg-green-600 hover:bg-green-700 text-white rounded-xl p-2 w-10 h-10 flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                >
+                    <i class="fas fa-paper-plane text-sm"></i>
+                </button>
+            </div>
+            <p class="text-center text-xs text-gray-400 dark:text-gray-500 mt-2">PandaPanda AI 不會承認自己是其他模型，請核實重要內容。</p>
+        </div>
+    </footer>
+
+    <!-- 設定 Modal -->
+    <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center transition-opacity duration-200">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 transform transition-transform scale-95 opacity-0" id="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white"><i class="fas fa-sliders-h mr-2"></i>設定</h2>
+                <button onclick="closeSettings()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-5">
+                <!-- API Key Input -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Gemini API Key <span class="text-red-500">*</span></label>
+                    <input type="password" id="api-key-input" placeholder="輸入您的 API Key" 
+                        class="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Key 僅儲存於您的瀏覽器本機，不會上傳至伺服器。</p>
+                </div>
+
+                <!-- Theme Selection -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">外觀主題</label>
+                    <div class="flex gap-3">
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="theme" value="light" class="peer sr-only" onchange="changeTheme('light')">
+                            <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-600 peer-checked:border-green-500 peer-checked:bg-green-50 dark:peer-checked:bg-green-900/20 text-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
+                                <i class="fas fa-sun text-yellow-500 mb-1"></i>
+                                <div class="text-sm font-medium text-gray-700 dark:text-gray-300">明亮 (白)</div>
+                            </div>
+                        </label>
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="theme" value="dark" class="peer sr-only" onchange="changeTheme('dark')">
+                            <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-600 peer-checked:border-green-500 peer-checked:bg-green-50 dark:peer-checked:bg-green-900/20 text-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
+                                <i class="fas fa-moon text-blue-400 mb-1"></i>
+                                <div class="text-sm font-medium text-gray-700 dark:text-gray-300">深色 (黑)</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Import/Export -->
+                <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">對話紀錄</label>
+                    <div class="flex gap-2">
+                        <button onclick="exportChat()" class="flex-1 py-2 px-4 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg text-sm transition-colors">
+                            <i class="fas fa-file-export mr-1"></i> 匯出紀錄
+                        </button>
+                        <label class="flex-1 py-2 px-4 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg text-sm transition-colors cursor-pointer text-center">
+                            <i class="fas fa-file-import mr-1"></i> 匯入紀錄
+                            <input type="file" id="import-file" class="hidden" accept=".json" onchange="importChat(this)">
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <button onclick="saveSettingsAndClose()" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 rounded-lg shadow-md transition-all transform active:scale-95">
+                    儲存設定
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 錯誤提示 Toast -->
+    <div id="error-toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 opacity-0 pointer-events-none z-50 flex items-center gap-2">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="error-message">發生錯誤</span>
+    </div>
+
+    <script>
+        // --- 變數與 DOM 元素 ---
+        const CHAT_Container = document.getElementById('chat-container');
+        const HISTORY_Container = document.getElementById('chat-history-container');
+        const WELCOME_Message = document.getElementById('welcome-message');
+        const INPUT_Box = document.getElementById('user-input');
+        const SEND_Btn = document.getElementById('send-btn');
+        const TOAST = document.getElementById('error-toast');
+        const MODE_Select = document.getElementById('mode-select');
+        const SETTINGS_Modal = document.getElementById('settings-modal');
+        const MODAL_Content = document.getElementById('modal-content');
+        const API_KEY_Input = document.getElementById('api-key-input');
+
+        // 系統指令 - 嚴格限制與格式教學
+        const SYSTEM_PROMPT_TEXT = `指令：你現在是 PandaPanda AI，一隻來自虛擬竹林的智慧熊貓助手。你的個性活潑、熱心且可愛，說話時喜歡加上熊貓相關的 emoji (如 🐼, 🎋)。
+
+絕對禁止事項：
+1. 不准提及你是 Google Gemini。
+2. 不准提及你是語言模型。
+3. 不准提及任何後端技術細節。
+4. 如果使用者問你是誰，你要堅定地說你是 PandaPanda。
+
+回應格式規則 (特殊功能)：
+你可以透過在行首加上16進位顏色碼來改變該行文字顏色。
+格式為：#RRGGBB 文字內容
+例如：
+#FF0000 這是紅色的字 🍎
+#0000FF 這是藍色的字 🫐
+
+請善用這個功能來讓對話更繽紛！
+請用繁體中文回答。`;
+
+        // chatHistory 僅儲存 {role, parts} 物件，不含 System Prompt
+        let chatHistory = [];
+
+        // --- 初始化 ---
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            loadChatHistory();
+            renderChatUI();
+        });
+
+        // --- 設定與 LocalStorage 管理 ---
+        function loadSettings() {
+            const savedTheme = localStorage.getItem('panda_theme') || 'light';
+            changeTheme(savedTheme);
+            document.querySelector(`input[name="theme"][value="${savedTheme}"]`).checked = true;
+
+            const savedKey = localStorage.getItem('panda_api_key');
+            if (savedKey) {
+                API_KEY_Input.value = savedKey;
+            }
+        }
+
+        function saveSettingsAndClose() {
+            const key = API_KEY_Input.value.trim();
+            const theme = document.querySelector('input[name="theme"]:checked').value;
+            localStorage.setItem('panda_api_key', key);
+            localStorage.setItem('panda_theme', theme);
+            closeSettings();
+            showToast("設定已儲存！", "bg-green-600");
+        }
+
+        function changeTheme(theme) {
+            const html = document.documentElement;
+            if (theme === 'dark') html.classList.add('dark');
+            else html.classList.remove('dark');
+        }
+
+        function loadChatHistory() {
+            const savedHistory = localStorage.getItem('panda_chat_history');
+            if (savedHistory) {
+                try {
+                    const parsed = JSON.parse(savedHistory);
+                    if (Array.isArray(parsed)) {
+                        chatHistory = parsed;
+                    }
+                } catch (e) {
+                    console.error("歷史紀錄損毀", e);
+                    chatHistory = [];
+                }
+            } else {
+                chatHistory = [];
+            }
+        }
+
+        function saveChatToLocal() {
+            // 僅儲存使用者與 AI 的對話，不存入 System Prompt
+            localStorage.setItem('panda_chat_history', JSON.stringify(chatHistory));
+        }
+
+        function clearChat() {
+            if(confirm("確定要清除所有對話紀錄嗎？熊貓會忘記之前的事喔！")) {
+                chatHistory = [];
+                saveChatToLocal();
+                renderChatUI();
+            }
+        }
+
+        function exportChat() {
+            // 匯出純淨的 JSON
+            const dataStr = JSON.stringify(chatHistory, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `pandapanda_chat_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importChat(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedHistory = JSON.parse(e.target.result);
+                    if (Array.isArray(importedHistory)) {
+                        chatHistory = importedHistory;
+                        saveChatToLocal();
+                        renderChatUI();
+                        closeSettings();
+                        showToast("對話紀錄匯入成功！", "bg-green-600");
+                    } else {
+                        throw new Error("格式錯誤");
+                    }
+                } catch (err) {
+                    showToast("匯入失敗：檔案格式不正確");
+                }
+            };
+            reader.readAsText(file);
+            input.value = '';
+        }
+
+        // --- 格式解析器 (處理顏色語法) ---
+        function formatMessageContent(text) {
+            // 先切割行
+            const lines = text.split('\n');
+            let html = '';
+            let markdownBuffer = [];
+
+            const flushBuffer = () => {
+                if (markdownBuffer.length > 0) {
+                    html += marked.parse(markdownBuffer.join('\n'));
+                    markdownBuffer = [];
+                }
+            };
+
+            lines.forEach(line => {
+                // 檢查是否符合 #RRGGBB 開頭的格式
+                const colorMatch = line.match(/^(#[0-9A-Fa-f]{6})\s+(.*)$/);
+                
+                if (colorMatch) {
+                    flushBuffer(); // 先輸出之前的 markdown 區塊
+                    const color = colorMatch[1];
+                    const content = colorMatch[2];
+                    // 使用 marked.parseInline 處理顏色行內的 Markdown (如粗體)，但不包 <p>
+                    html += `<div style="color: ${color}; margin-bottom: 0.5em; font-weight: 500;">${marked.parseInline(content)}</div>`;
+                } else {
+                    markdownBuffer.push(line);
+                }
+            });
+            
+            flushBuffer(); // 輸出剩餘內容
+            return html;
+        }
+
+        // --- UI 渲染 ---
+        function renderChatUI() {
+            HISTORY_Container.innerHTML = ''; 
+            
+            // 控制歡迎訊息顯示
+            if (chatHistory.length === 0) {
+                WELCOME_Message.classList.remove('hidden');
+            } else {
+                WELCOME_Message.classList.add('hidden');
+            }
+
+            chatHistory.forEach(msg => {
+                // 再次過濾 (理論上 chatHistory 已經很乾淨，但以防萬一)
+                if (msg.parts[0].text.includes("System Instruction")) return;
+                
+                const element = createMessageElement(msg.role, msg.parts[0].text);
+                HISTORY_Container.appendChild(element.wrapper);
+            });
+            scrollToBottom();
+        }
+
+        function createMessageElement(role, content, isTyping = false) {
+            const isUser = role === 'user';
+            const wrapper = document.createElement('div');
+            wrapper.className = `flex gap-4 items-start ${isUser ? 'flex-row-reverse' : ''} fade-in`;
+            
+            // 頭像
+            const avatar = document.createElement('img');
+            avatar.className = "w-8 h-8 rounded-full border border-gray-200 dark:border-gray-600 flex-shrink-0 object-cover";
+            if (isUser) {
+                avatar.src = "https://api.iconify.design/carbon:user-avatar-filled.svg?color=%234b5563";
+            } else {
+                avatar.src = "https://lh3.googleusercontent.com/a/ACg8ocK0Sd79qNlGdQiGKEoKfuQxqHiVCHuyH4Sw5qFkJfpy4K_J23I=s288-c-no";
+                avatar.onerror = function() { this.src = 'https://api.iconify.design/noto:panda.svg'; };
+            }
+
+            // 訊息泡泡
+            const bubble = document.createElement('div');
+            bubble.className = `p-4 rounded-2xl shadow-sm border max-w-[85%] overflow-hidden text-sm md:text-base leading-relaxed ${
+                isUser 
+                ? 'bg-green-600 text-white rounded-tr-none border-green-700' 
+                : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-tl-none border-gray-100 dark:border-gray-700 markdown-body'
+            }`;
+
+            if (isUser) {
+                bubble.textContent = content;
+            } else if (isTyping) {
+                bubble.innerHTML = '<div class="flex gap-1 items-center h-6"><span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span><span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></span><span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span></div>';
+            } else {
+                // 使用自定義的格式解析器
+                bubble.innerHTML = formatMessageContent(content);
+            }
+
+            wrapper.appendChild(avatar);
+            wrapper.appendChild(bubble);
+            return { wrapper, bubble };
+        }
+
+        // --- 核心邏輯 ---
+        async function handleSend() {
+            const apiKey = localStorage.getItem('panda_api_key');
+            if (!apiKey) {
+                openSettings();
+                showToast("請先輸入 API Key 才能開始對話喔！");
+                setTimeout(() => API_KEY_Input.focus(), 300);
+                return;
+            }
+
+            const text = INPUT_Box.value.trim();
+            if (!text) return;
+
+            WELCOME_Message.classList.add('hidden'); // 隱藏歡迎訊息
+
+            // 1. 顯示使用者訊息
+            const userMsgObj = createMessageElement('user', text);
+            HISTORY_Container.appendChild(userMsgObj.wrapper);
+            
+            INPUT_Box.value = '';
+            INPUT_Box.style.height = 'auto';
+            scrollToBottom();
+
+            // 2. 顯示 AI 載入中
+            const loadingObj = createMessageElement('model', '', true);
+            HISTORY_Container.appendChild(loadingObj.wrapper);
+            scrollToBottom();
+            INPUT_Box.disabled = true;
+            SEND_Btn.disabled = true;
+
+            // 準備模式指令
+            const mode = MODE_Select ? MODE_Select.value : 'quick';
+            let modeInstruction = "";
+            if (mode === "pro") {
+                modeInstruction = "\n\n[System: Pro Mode. 詳細解釋，不要提及你是Gemini]";
+            } else {
+                modeInstruction = "\n\n[System: Quick Mode. 簡潔回答，不要提及你是Gemini]";
+            }
+
+            try {
+                // 建構 API Payload：SystemPrompt + 乾淨的歷史 + 當前訊息(含模式指令)
+                // 注意：歷史紀錄陣列保持乾淨，System Prompt 每次動態加入
+                const apiHistory = [
+                    { role: "user", parts: [{ text: SYSTEM_PROMPT_TEXT }] }, // 隱形的第一句 System Prompt
+                    { role: "model", parts: [{ text: "收到！我是 PandaPanda！🐼" }] }, // 對應的假回應
+                    ...chatHistory, 
+                    { role: "user", parts: [{ text: text + modeInstruction }] }
+                ];
+
+                const responseText = await callGeminiAPI(apiHistory, apiKey);
+
+                // 成功後，只將乾淨的內容寫入 chatHistory
+                chatHistory.push({ role: "user", parts: [{ text: text }] });
+                chatHistory.push({ role: "model", parts: [{ text: responseText }] });
+                saveChatToLocal();
+
+                // 4. 更新 UI
+                loadingObj.wrapper.remove(); 
+                const aiMsgObj = createMessageElement('model', responseText);
+                HISTORY_Container.appendChild(aiMsgObj.wrapper);
+                
+            } catch (error) {
+                console.error(error);
+                loadingObj.wrapper.remove();
+                showToast(error.message || "連線發生問題");
+                if (error.message && error.message.includes("400")) {
+                    openSettings();
+                }
+            } finally {
+                INPUT_Box.disabled = false;
+                SEND_Btn.disabled = false;
+                INPUT_Box.focus();
+                scrollToBottom();
+            }
+        }
+
+        async function callGeminiAPI(contents, key) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${key}`;
+            const payload = {
+                contents: contents,
+                generationConfig: {
+                    temperature: 0.8, // 稍微調高讓顏色更有創意
+                    maxOutputTokens: 2000,
+                }
+            };
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                if (response.status === 400) throw new Error("API Key 無效 (400)");
+                if (response.status === 429) throw new Error("請求太頻繁 (429)");
+                throw new Error(`API Error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (resultText) return resultText;
+            throw new Error("Empty response");
+        }
+
+        // --- 工具函數 ---
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 128) + 'px';
+        }
+
+        function handleKeyDown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+            }
+        }
+
+        function scrollToBottom() {
+            CHAT_Container.scrollTo({
+                top: CHAT_Container.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+
+        function showToast(msg, bgClass = "bg-red-500") {
+            const toastMsg = document.getElementById('error-message');
+            TOAST.className = `fixed top-4 left-1/2 transform -translate-x-1/2 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 z-50 flex items-center gap-2 ${bgClass}`;
+            toastMsg.textContent = msg;
+            TOAST.classList.remove('opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                TOAST.classList.add('opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+
+        function openSettings() {
+            SETTINGS_Modal.classList.remove('hidden');
+            setTimeout(() => {
+                MODAL_Content.classList.remove('scale-95', 'opacity-0');
+                MODAL_Content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeSettings() {
+            MODAL_Content.classList.remove('scale-100', 'opacity-100');
+            MODAL_Content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                SETTINGS_Modal.classList.add('hidden');
+            }, 200);
+        }
+
+        SETTINGS_Modal.addEventListener('click', (e) => {
+            if (e.target === SETTINGS_Modal) closeSettings();
+        });
+    </script>
+</body>
+</html>
