@@ -225,10 +225,10 @@
         </div>
     </div>
 
-    <!-- 錯誤提示 Toast -->
-    <div id="error-toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 opacity-0 pointer-events-none z-50 flex items-center gap-2">
-        <i class="fas fa-exclamation-circle"></i>
-        <span id="error-message">發生錯誤</span>
+    <!-- 錯誤提示 Toast (支援多行顯示) -->
+    <div id="error-toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-2xl shadow-lg transition-all duration-300 opacity-0 pointer-events-none z-50 flex items-start gap-2 max-w-[90%] md:max-w-[500px]">
+        <i class="fas fa-exclamation-circle mt-1 flex-shrink-0"></i>
+        <span id="error-message" class="text-sm leading-relaxed">發生錯誤</span>
     </div>
 
     <script>
@@ -244,26 +244,25 @@
         const MODAL_Content = document.getElementById('modal-content');
         const API_KEY_Input = document.getElementById('api-key-input');
 
-        // 系統指令 - 嚴格限制與格式教學
+        // 系統指令
         const SYSTEM_PROMPT_TEXT = `指令：你現在是 PandaPanda AI，一隻來自虛擬竹林的智慧熊貓助手。你的個性活潑、熱心且可愛，說話時喜歡加上熊貓相關的 emoji (如 🐼, 🎋)。
 
 絕對禁止事項：
 1. 不准提及你是 Google Gemini。
 2. 不准提及你是語言模型。
 3. 不准提及任何後端技術細節。
-4. 如果使用者問你是誰，你要堅定地說你是 PandaPanda。
+4. 禁用 markdown 的粗體語法 (**)。
+5. 如果使用者問你是誰，你要堅定地說你是 PandaPanda。
 
-回應格式規則 (特殊功能)：
-你可以透過在行首加上16進位顏色碼來改變該行文字顏色。
-格式為：#RRGGBB 文字內容
-例如：
-#FF0000 這是紅色的字 🍎
-#0000FF 這是藍色的字 🫐
+回應格式規則 (特殊功能 - 行內變色)：
+你可以在文字的任何地方加入 #RRGGBB 來改變後續文字的顏色，直到下一個顏色代碼出現或段落結束。
+格式範例：
+一般文字 #FF0000 紅色文字 #0000FF 藍色文字
 
 請善用這個功能來讓對話更繽紛！
 請用繁體中文回答。`;
 
-        // chatHistory 僅儲存 {role, parts} 物件，不含 System Prompt
+        // 簡化的資料結構
         let chatHistory = [];
 
         // --- 初始化 ---
@@ -306,7 +305,14 @@
                 try {
                     const parsed = JSON.parse(savedHistory);
                     if (Array.isArray(parsed)) {
-                        chatHistory = parsed;
+                        if (parsed.length > 0 && parsed[0].role) {
+                            chatHistory = parsed.map(item => ({
+                                sender: item.role === 'user' ? 'user' : 'panda',
+                                text: item.parts[0].text
+                            }));
+                        } else {
+                            chatHistory = parsed;
+                        }
                     }
                 } catch (e) {
                     console.error("歷史紀錄損毀", e);
@@ -318,7 +324,6 @@
         }
 
         function saveChatToLocal() {
-            // 僅儲存使用者與 AI 的對話，不存入 System Prompt
             localStorage.setItem('panda_chat_history', JSON.stringify(chatHistory));
         }
 
@@ -331,13 +336,12 @@
         }
 
         function exportChat() {
-            // 匯出純淨的 JSON
             const dataStr = JSON.stringify(chatHistory, null, 2);
             const blob = new Blob([dataStr], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `pandapanda_chat_${new Date().toISOString().slice(0,10)}.json`;
+            a.download = `pandapanda_simple_chat_${new Date().toISOString().slice(0,10)}.json`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -350,9 +354,17 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const importedHistory = JSON.parse(e.target.result);
-                    if (Array.isArray(importedHistory)) {
-                        chatHistory = importedHistory;
+                    const importedData = JSON.parse(e.target.result);
+                    if (Array.isArray(importedData)) {
+                        if (importedData.length > 0 && importedData[0].role) {
+                             chatHistory = importedData.map(item => ({
+                                sender: item.role === 'user' ? 'user' : 'panda',
+                                text: item.parts[0].text
+                            }));
+                        } else {
+                            chatHistory = importedData;
+                        }
+                        
                         saveChatToLocal();
                         renderChatUI();
                         closeSettings();
@@ -361,51 +373,32 @@
                         throw new Error("格式錯誤");
                     }
                 } catch (err) {
-                    showToast("匯入失敗：檔案格式不正確");
+                    showToast("匯入失敗：檔案格式不正確，請確認 JSON 內容");
                 }
             };
             reader.readAsText(file);
             input.value = '';
         }
 
-        // --- 格式解析器 (處理顏色語法) ---
+        // --- 格式解析器 (支援行內顏色語法) ---
         function formatMessageContent(text) {
-            // 先切割行
-            const lines = text.split('\n');
-            let html = '';
-            let markdownBuffer = [];
-
-            const flushBuffer = () => {
-                if (markdownBuffer.length > 0) {
-                    html += marked.parse(markdownBuffer.join('\n'));
-                    markdownBuffer = [];
-                }
-            };
-
-            lines.forEach(line => {
-                // 檢查是否符合 #RRGGBB 開頭的格式
-                const colorMatch = line.match(/^(#[0-9A-Fa-f]{6})\s+(.*)$/);
-                
-                if (colorMatch) {
-                    flushBuffer(); // 先輸出之前的 markdown 區塊
-                    const color = colorMatch[1];
-                    const content = colorMatch[2];
-                    // 使用 marked.parseInline 處理顏色行內的 Markdown (如粗體)，但不包 <p>
-                    html += `<div style="color: ${color}; margin-bottom: 0.5em; font-weight: 500;">${marked.parseInline(content)}</div>`;
-                } else {
-                    markdownBuffer.push(line);
-                }
-            });
+            // 邏輯：使用 Regex 全域搜尋顏色代碼 #RRGGBB 以及其後的內容
+            // Regex: /(#[0-9A-Fa-f]{6})([\s\S]*?)(?=(?:#[0-9A-Fa-f]{6})|$)/g
+            // 說明：捕捉顏色碼 (Group 1) 與後續文字 (Group 2)，直到遇到下一個顏色碼或字串結尾
             
-            flushBuffer(); // 輸出剩餘內容
-            return html;
+            // 先將顏色語法轉換為 HTML span
+            let formattedText = text.replace(/(#[0-9A-Fa-f]{6})([\s\S]*?)(?=(?:#[0-9A-Fa-f]{6})|$)/g, (match, color, content) => {
+                return `<span style="color: ${color}">${content}</span>`;
+            });
+
+            // 再交給 marked 解析 Markdown (marked 支援 HTML 標籤內的內容，但block-level較嚴格，這裡是 inline span 所以通常沒問題)
+            return marked.parse(formattedText);
         }
 
         // --- UI 渲染 ---
         function renderChatUI() {
             HISTORY_Container.innerHTML = ''; 
             
-            // 控制歡迎訊息顯示
             if (chatHistory.length === 0) {
                 WELCOME_Message.classList.remove('hidden');
             } else {
@@ -413,17 +406,15 @@
             }
 
             chatHistory.forEach(msg => {
-                // 再次過濾 (理論上 chatHistory 已經很乾淨，但以防萬一)
-                if (msg.parts[0].text.includes("System Instruction")) return;
-                
-                const element = createMessageElement(msg.role, msg.parts[0].text);
+                if (msg.text.includes("System Instruction")) return;
+                const element = createMessageElement(msg.sender, msg.text);
                 HISTORY_Container.appendChild(element.wrapper);
             });
             scrollToBottom();
         }
 
-        function createMessageElement(role, content, isTyping = false) {
-            const isUser = role === 'user';
+        function createMessageElement(sender, content, isTyping = false) {
+            const isUser = sender === 'user';
             const wrapper = document.createElement('div');
             wrapper.className = `flex gap-4 items-start ${isUser ? 'flex-row-reverse' : ''} fade-in`;
             
@@ -450,7 +441,6 @@
             } else if (isTyping) {
                 bubble.innerHTML = '<div class="flex gap-1 items-center h-6"><span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span><span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></span><span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span></div>';
             } else {
-                // 使用自定義的格式解析器
                 bubble.innerHTML = formatMessageContent(content);
             }
 
@@ -459,7 +449,7 @@
             return { wrapper, bubble };
         }
 
-        // --- 核心邏輯 ---
+        // --- 核心邏輯與 API 呼叫 ---
         async function handleSend() {
             const apiKey = localStorage.getItem('panda_api_key');
             if (!apiKey) {
@@ -472,7 +462,7 @@
             const text = INPUT_Box.value.trim();
             if (!text) return;
 
-            WELCOME_Message.classList.add('hidden'); // 隱藏歡迎訊息
+            WELCOME_Message.classList.add('hidden');
 
             // 1. 顯示使用者訊息
             const userMsgObj = createMessageElement('user', text);
@@ -483,13 +473,13 @@
             scrollToBottom();
 
             // 2. 顯示 AI 載入中
-            const loadingObj = createMessageElement('model', '', true);
+            const loadingObj = createMessageElement('panda', '', true);
             HISTORY_Container.appendChild(loadingObj.wrapper);
             scrollToBottom();
             INPUT_Box.disabled = true;
             SEND_Btn.disabled = true;
 
-            // 準備模式指令
+            // 模式指令
             const mode = MODE_Select ? MODE_Select.value : 'quick';
             let modeInstruction = "";
             if (mode === "pro") {
@@ -499,33 +489,36 @@
             }
 
             try {
-                // 建構 API Payload：SystemPrompt + 乾淨的歷史 + 當前訊息(含模式指令)
-                // 注意：歷史紀錄陣列保持乾淨，System Prompt 每次動態加入
+                // 動態轉換歷史格式
                 const apiHistory = [
-                    { role: "user", parts: [{ text: SYSTEM_PROMPT_TEXT }] }, // 隱形的第一句 System Prompt
-                    { role: "model", parts: [{ text: "收到！我是 PandaPanda！🐼" }] }, // 對應的假回應
-                    ...chatHistory, 
+                    { role: "user", parts: [{ text: SYSTEM_PROMPT_TEXT }] }, 
+                    { role: "model", parts: [{ text: "收到！我是 PandaPanda！🐼" }] },
+                    ...chatHistory.map(msg => ({
+                        role: msg.sender === 'user' ? 'user' : 'model',
+                        parts: [{ text: msg.text }]
+                    })),
                     { role: "user", parts: [{ text: text + modeInstruction }] }
                 ];
 
                 const responseText = await callGeminiAPI(apiHistory, apiKey);
 
-                // 成功後，只將乾淨的內容寫入 chatHistory
-                chatHistory.push({ role: "user", parts: [{ text: text }] });
-                chatHistory.push({ role: "model", parts: [{ text: responseText }] });
+                // 成功後，寫入簡單格式到歷史紀錄
+                chatHistory.push({ sender: 'user', text: text });
+                chatHistory.push({ sender: 'panda', text: responseText });
                 saveChatToLocal();
 
                 // 4. 更新 UI
                 loadingObj.wrapper.remove(); 
-                const aiMsgObj = createMessageElement('model', responseText);
+                const aiMsgObj = createMessageElement('panda', responseText);
                 HISTORY_Container.appendChild(aiMsgObj.wrapper);
                 
             } catch (error) {
                 console.error(error);
                 loadingObj.wrapper.remove();
                 showToast(error.message || "連線發生問題");
-                if (error.message && error.message.includes("400")) {
-                    openSettings();
+                
+                if (error.message && (error.message.includes("400") || error.message.includes("403") || error.message.includes("權限不足"))) {
+                    setTimeout(() => openSettings(), 1500);
                 }
             } finally {
                 INPUT_Box.disabled = false;
@@ -540,7 +533,7 @@
             const payload = {
                 contents: contents,
                 generationConfig: {
-                    temperature: 0.8, // 稍微調高讓顏色更有創意
+                    temperature: 0.8,
                     maxOutputTokens: 2000,
                 }
             };
@@ -552,15 +545,25 @@
             });
 
             if (!response.ok) {
-                if (response.status === 400) throw new Error("API Key 無效 (400)");
-                if (response.status === 429) throw new Error("請求太頻繁 (429)");
-                throw new Error(`API Error: ${response.status}`);
+                if (response.status === 429) {
+                    throw new Error("請求太頻繁 (Rate Limit)：請喝杯茶稍等一下再試 (429)。");
+                }
+                if (response.status === 403) {
+                    throw new Error("額度不足或權限錯誤 (Quota Exceeded)：您的 API Key 可能已達使用上限或無效 (403)。");
+                }
+                if (response.status === 400) {
+                    throw new Error("請求格式錯誤：API Key 可能無效 (400)。");
+                }
+                if (response.status === 503) {
+                    throw new Error("服務暫時無法使用：伺服器正在維修中，請稍後再試 (503)。");
+                }
+                throw new Error(`API 連線錯誤：代碼 ${response.status}`);
             }
 
             const data = await response.json();
             const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
             if (resultText) return resultText;
-            throw new Error("Empty response");
+            throw new Error("API 回傳內容為空，請重試。");
         }
 
         // --- 工具函數 ---
@@ -585,12 +588,12 @@
 
         function showToast(msg, bgClass = "bg-red-500") {
             const toastMsg = document.getElementById('error-message');
-            TOAST.className = `fixed top-4 left-1/2 transform -translate-x-1/2 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 z-50 flex items-center gap-2 ${bgClass}`;
+            TOAST.className = `fixed top-4 left-1/2 transform -translate-x-1/2 text-white px-6 py-3 rounded-2xl shadow-lg transition-all duration-300 z-50 flex items-start gap-2 max-w-[90%] md:max-w-[500px] ${bgClass}`;
             toastMsg.textContent = msg;
             TOAST.classList.remove('opacity-0', 'pointer-events-none');
             setTimeout(() => {
                 TOAST.classList.add('opacity-0', 'pointer-events-none');
-            }, 3000);
+            }, 5000);
         }
 
         function openSettings() {
