@@ -54,7 +54,7 @@
         /* 文件/程式碼卡片 */
         .embedded-file-card {
             background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.75rem 1rem;
-            margin: 0.5rem 0;
+            margin: 0.75rem 0;
             display: flex; align-items: center; gap: 1rem; transition: all 0.2s; cursor: pointer;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
@@ -144,7 +144,7 @@
                 <img src="https://lh3.googleusercontent.com/a/ACg8ocK0Sd79qNlGdQiGKEoKfuQxqHiVCHuyH4Sw5qFkJfpy4K_J23I=s288-c-no" class="w-20 h-20 rounded-full border-4 border-white dark:border-gray-700 shadow-xl mb-6" onerror="this.src='https://api.iconify.design/noto:panda.svg';">
                 <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">你好，<span id="home-nickname">使用者</span></h2>
                 <p class="text-gray-500 dark:text-gray-400 text-center max-w-md">
-                    我是 PandaPanda AI v2.5.1。<br>
+                    我是 PandaPanda AI v2.5.2。<br>
                     隨時準備為您寫作、寫程式或解答問題。
                 </p>
             </div>
@@ -238,7 +238,7 @@
                 </div>
                 <!-- System -->
                 <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
-                    <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">系統設定 <span class="text-xs font-normal text-gray-400 ml-2">(v2.5.1)</span></h3>
+                    <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">系統設定 <span class="text-xs font-normal text-gray-400 ml-2">(v2.5.2)</span></h3>
                     <div class="mb-3">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">API Key</label>
                         <input type="password" id="api-key-input" class="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white outline-none">
@@ -292,16 +292,48 @@
             </div>
             <div class="space-y-4">
                 <div class="relative pl-4 border-l-2 border-green-500">
-                    <div class="text-xs text-green-600 font-bold mb-1">v2.5.1 - 2025/11/22 (Hotfix)</div>
-                    <p class="text-sm text-gray-700 dark:text-gray-300">1. 緊急修復：Prompt Leaking 問題，AI 不再輸出內部指令。<br>2. 修復：上傳圖片與發送功能穩定性。</p>
+                    <div class="text-xs text-green-600 font-bold mb-1">v2.5.2 - 2025/11/22</div>
+                    <p class="text-sm text-gray-700 dark:text-gray-300">更新系統提示詞，優化指令執行穩定性。</p>
+                </div>
+                <div class="relative pl-4 border-l-2 border-gray-300 dark:border-gray-600">
+                    <div class="text-xs text-gray-500 font-bold mb-1">v2.5.1 - 2025/11/22 (Hotfix)</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">修復系統回應洩漏問題。</p>
                 </div>
                 <div class="relative pl-4 border-l-2 border-gray-300 dark:border-gray-600">
                     <div class="text-xs text-gray-500 font-bold mb-1">v2.5.0</div>
                     <p class="text-sm text-gray-600 dark:text-gray-400">優化寫作流程、新增「停止生成」按鈕、自動標題優化。</p>
                 </div>
                 <div class="relative pl-4 border-l-2 border-gray-300 dark:border-gray-600">
-                    <div class="text-xs text-gray-500 font-bold mb-1">v1.0.0 - 初始版本</div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">基礎對話功能、Markdown 支援。</p>
+                    <div class="text-xs text-gray-500 font-bold mb-1">v2.4.0</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">程式碼預覽執行功能。</p>
+                </div>
+                <div class="relative pl-4 border-l-2 border-gray-300 dark:border-gray-600">
+                    <div class="text-xs text-gray-500 font-bold mb-1">v2.3.0</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">帳號備份/還原 (ZIP)、自動儲存。</p>
+                </div>
+                <div class="relative pl-4 border-l-2 border-gray-300 dark:border-gray-600">
+                    <div class="text-xs text-gray-500 font-bold mb-1">v2.2.0</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">彈出式視窗、BAT 支援。</p>
+                </div>
+                <div class="relative pl-4 border-l-2 border-gray-300 dark:border-gray-600">
+                    <div class="text-xs text-gray-500 font-bold mb-1">v2.1.0</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">側邊欄、自動命名。</p>
+                </div>
+                <div class="relative pl-4 border-l-2 border-gray-300 dark:border-gray-600">
+                    <div class="text-xs text-gray-500 font-bold mb-1">v2.0.0</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">介面重構 (Word 風格)。</p>
+                </div>
+                <div class="relative pl-4 border-l-2 border-gray-300 dark:border-gray-600">
+                    <div class="text-xs text-gray-500 font-bold mb-1">v1.5.0</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">字體選擇功能。</p>
+                </div>
+                <div class="relative pl-4 border-l-2 border-gray-300 dark:border-gray-600">
+                    <div class="text-xs text-gray-500 font-bold mb-1">v1.0.1</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">修正 Markdown 渲染。</p>
+                </div>
+                <div class="relative pl-4 border-l-2 border-gray-300 dark:border-gray-600">
+                    <div class="text-xs text-gray-500 font-bold mb-1">v1.0.0</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">初始版本發布。</p>
                 </div>
             </div>
             <button onclick="closeVersionModal()" class="w-full mt-6 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 py-2 rounded-lg text-sm">關閉</button>
