@@ -41,26 +41,26 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
         
-        /* Markdown */
+        /* Markdown & Content */
         .markdown-body { font-size: 16px; line-height: 1.7; }
         .markdown-body p { margin-bottom: 0.75em; }
-        .markdown-body pre { 
-            background-color: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 0.5rem; 
-            overflow-x: auto; margin: 1em 0; position: relative; font-family: monospace; 
-        }
+        /* 隱藏原始 pre，由 JS 轉換為卡片 */
+        .markdown-body pre { display: none; } 
         .markdown-body code { background-color: rgba(0,0,0,0.05); padding: 0.2em 0.4em; border-radius: 0.25em; font-family: inherit; }
-        .dark .markdown-body code:not(pre code) { background-color: rgba(255,255,255,0.1); }
+        .dark .markdown-body code { background-color: rgba(255,255,255,0.1); }
 
-        /* 文件卡片 */
-        .doc-card {
-            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1rem;
+        /* 文件/程式碼卡片 (嵌入在對話中) */
+        .embedded-file-card {
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.75rem 1rem;
+            margin: 0.75rem 0;
             display: flex; align-items: center; gap: 1rem; transition: all 0.2s; cursor: pointer;
-            max-width: 400px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
-        .doc-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .dark .doc-card { background: #1e293b; border-color: #334155; }
+        .embedded-file-card:hover { transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-color: #cbd5e1; }
+        .dark .embedded-file-card { background: #1e293b; border-color: #334155; }
+        .dark .embedded-file-card:hover { border-color: #475569; background: #334155; }
 
-        /* 文件紙張 */
+        /* 文件紙張 (預覽用) */
         .document-paper {
             background-color: #ffffff; width: 100%; max-width: 210mm; min-height: 297mm;
             margin: 2rem auto; padding: 25mm 20mm; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
@@ -87,11 +87,11 @@
         .typing-dot:nth-child(2) { animation-delay: -0.16s; }
         @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
 
-        /* Select & Layout */
+        /* Select */
         select { appearance: none; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.2rem center; background-repeat: no-repeat; background-size: 1em 1em; padding-right: 1.5rem; }
         
         /* Sidebar Transition */
-        .sidebar-transition { transition: transform 0.3s ease-in-out, width 0.3s ease-in-out; }
+        .sidebar-transition { transition: transform 0.3s ease-in-out; }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 h-screen flex font-tw-sans text-gray-800 dark:text-gray-100 transition-colors duration-300 overflow-hidden">
@@ -109,9 +109,7 @@
             </button>
         </div>
 
-        <div id="session-list" class="flex-1 overflow-y-auto px-3 space-y-1 pb-4">
-            <!-- JS Injected -->
-        </div>
+        <div id="session-list" class="flex-1 overflow-y-auto px-3 space-y-1 pb-4"></div>
 
         <div class="p-4 border-t border-gray-200 dark:border-gray-700">
              <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
@@ -140,21 +138,15 @@
 
         <!-- Main Chat Area -->
         <main id="main-area" class="flex-1 overflow-y-auto p-4 scroll-smooth bg-gray-100 dark:bg-gray-900 relative">
-            
-            <!-- Home View -->
             <div id="home-view" class="absolute inset-0 flex flex-col items-center justify-center p-4 fade-in">
                 <img src="https://lh3.googleusercontent.com/a/ACg8ocK0Sd79qNlGdQiGKEoKfuQxqHiVCHuyH4Sw5qFkJfpy4K_J23I=s288-c-no" class="w-20 h-20 rounded-full border-4 border-white dark:border-gray-700 shadow-xl mb-6" onerror="this.src='https://api.iconify.design/noto:panda.svg';">
                 <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">你好，<span id="home-nickname">使用者</span></h2>
                 <p class="text-gray-500 dark:text-gray-400 text-center max-w-md">
-                    我是 PandaPanda AI。有什麼我可以幫你的嗎？<br>
-                    寫文件、寫程式 (支援 BAT/自訂格式) 或解答問題。
+                    我是 PandaPanda AI v2.5.0。<br>
+                    隨時準備為您寫作、寫程式或解答問題。
                 </p>
             </div>
-
-            <!-- Chat View -->
-            <div id="chat-container" class="max-w-5xl mx-auto space-y-6 pb-4 hidden min-h-[50vh]">
-                <!-- Dynamic Content -->
-            </div>
+            <div id="chat-container" class="max-w-5xl mx-auto space-y-6 pb-4 hidden min-h-[50vh]"></div>
         </main>
 
         <!-- Footer Tools -->
@@ -189,8 +181,7 @@
 
                             <div class="relative group flex items-center gap-2">
                                 <select id="mode-select" onchange="toggleCustomInput()" class="pl-3 pr-6 py-1.5 bg-green-50 dark:bg-green-900/30 border-none rounded-lg text-xs font-medium text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/50 cursor-pointer focus:ring-0 transition-colors"></select>
-                                <!-- 自訂檔案類型輸入框 -->
-                                <input type="text" id="custom-mode-input" placeholder="輸入檔案類型 (如: Go, Rust)" class="hidden w-32 py-1.5 px-2 text-xs rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-green-500 outline-none">
+                                <input type="text" id="custom-mode-input" placeholder="輸入檔案類型 (如: Go)" class="hidden w-32 py-1.5 px-2 text-xs rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-green-500 outline-none">
                             </div>
                         </div>
 
@@ -199,7 +190,9 @@
                                 <option value="flash">⚡ Flash</option>
                                 <option value="pro">🧠 Pro</option>
                             </select>
-                            <button id="send-btn" onclick="handleSend()" class="bg-green-600 hover:bg-green-700 text-white rounded-xl p-2 w-9 h-9 flex items-center justify-center shadow-sm disabled:opacity-50"><i class="fas fa-paper-plane text-sm"></i></button>
+                            <button id="send-btn" onclick="handleSendAction()" class="bg-green-600 hover:bg-green-700 text-white rounded-xl p-2 w-9 h-9 flex items-center justify-center shadow-sm disabled:opacity-50 transition-all">
+                                <i class="fas fa-paper-plane text-sm"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -207,7 +200,7 @@
         </footer>
     </div>
 
-    <!-- 預覽彈出視窗 -->
+    <!-- Preview Modal -->
     <div id="preview-modal" class="fixed inset-0 z-70 hidden">
         <div class="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity" onclick="closePreviewModal()"></div>
         <div class="absolute inset-4 md:inset-10 bg-gray-100 dark:bg-gray-900 rounded-xl shadow-2xl flex flex-col overflow-hidden transition-transform transform scale-95 opacity-0" id="preview-modal-content">
@@ -217,9 +210,7 @@
                     <span id="preview-type-badge" class="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300">DOC</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button id="run-code-btn" class="hidden bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-1">
-                        <i class="fas fa-play"></i> 執行/預覽
-                    </button>
+                    <button id="run-code-btn" class="hidden bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-1"><i class="fas fa-play"></i> 執行/預覽</button>
                     <button onclick="closePreviewModal()" class="bg-gray-200 hover:bg-red-500 hover:text-white text-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-red-500 w-8 h-8 rounded-full flex items-center justify-center transition-colors"><i class="fas fa-times"></i></button>
                 </div>
             </div>
@@ -227,7 +218,7 @@
         </div>
     </div>
 
-    <!-- 設定 Modal -->
+    <!-- Settings Modal -->
     <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 z-modal hidden flex items-center justify-center transition-opacity duration-200">
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 transform transition-transform scale-95 opacity-0 max-h-[90vh] overflow-y-auto" id="settings-modal-content">
             <div class="flex justify-between items-center mb-6">
@@ -235,21 +226,20 @@
                 <button onclick="closeSettings()" class="text-gray-400 hover:text-gray-600">×</button>
             </div>
             <div class="space-y-6">
-                <!-- Personal Settings -->
+                <!-- Personal -->
                 <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
                     <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">個人設定</h3>
                     <div class="mb-3">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">您的暱稱</label>
-                        <input type="text" id="setting-nickname" placeholder="如何稱呼您？" class="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white outline-none">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">暱稱</label>
+                        <input type="text" id="setting-nickname" class="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white outline-none">
                     </div>
                 </div>
-
-                <!-- System Settings -->
+                <!-- System -->
                 <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
-                    <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">系統設定</h3>
+                    <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">系統設定 <span class="text-xs font-normal text-gray-400 ml-2">(v2.5.0)</span></h3>
                     <div class="mb-3">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">API Key</label>
-                        <input type="password" id="api-key-input" placeholder="Gemini API Key" class="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white outline-none">
+                        <input type="password" id="api-key-input" class="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white outline-none">
                     </div>
                     <div class="mb-3">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">文件字體</label>
@@ -260,30 +250,22 @@
                         </select>
                     </div>
                 </div>
-
-                <!-- Account Management (Export/Import) -->
+                <!-- Actions -->
                 <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
                     <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">備份與分享</h3>
                     <div class="grid grid-cols-2 gap-2">
-                        <button onclick="exportAccount('self')" class="py-2 bg-gray-100 dark:bg-gray-700 hover:bg-green-50 dark:hover:bg-green-900/20 text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 rounded-lg text-sm flex items-center justify-center gap-1 border border-transparent hover:border-green-200 dark:hover:border-green-800 transition-all">
-                            <i class="fas fa-archive"></i> 備份給自己
-                        </button>
-                        <button onclick="exportAccount('share')" class="py-2 bg-gray-100 dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg text-sm flex items-center justify-center gap-1 border border-transparent hover:border-blue-200 dark:hover:border-blue-800 transition-all">
-                            <i class="fas fa-gift"></i> 分享給他人
-                        </button>
+                        <button onclick="exportAccount('self')" class="py-2 bg-gray-100 dark:bg-gray-700 hover:bg-green-50 dark:hover:bg-green-900/20 text-gray-700 dark:text-gray-300 rounded-lg text-sm border border-transparent hover:border-green-200 dark:hover:border-green-800 transition-all"><i class="fas fa-archive"></i> 備份給自己</button>
+                        <button onclick="exportAccount('share')" class="py-2 bg-gray-100 dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-700 dark:text-gray-300 rounded-lg text-sm border border-transparent hover:border-blue-200 dark:hover:border-blue-800 transition-all"><i class="fas fa-gift"></i> 分享給他人</button>
                     </div>
                     <label class="mt-2 flex items-center justify-center w-full py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm cursor-pointer transition-colors">
                         <i class="fas fa-file-import mr-2"></i> 匯入備份檔 (ZIP)
                         <input type="file" class="hidden" accept=".zip" onchange="importAccount(this)">
                     </label>
                 </div>
-
-                <!-- Data & Version -->
                 <div class="flex gap-2 pt-2">
                     <button onclick="showVersionHistory()" class="flex-1 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-sm hover:bg-blue-100 dark:hover:bg-blue-900/40">版本紀錄</button>
                     <button onclick="clearChat()" class="flex-1 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm hover:bg-red-100 dark:hover:bg-red-900/40">清除資料</button>
                 </div>
-
                 <button onclick="saveSettingsAndClose()" class="w-full bg-green-600 text-white font-medium py-2.5 rounded-lg mt-2">儲存設定</button>
             </div>
         </div>
@@ -294,13 +276,12 @@
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center">
             <div class="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🐼</div>
             <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">歡迎使用 PandaPanda</h2>
-            <p class="text-gray-500 dark:text-gray-400 mb-6">初次見面，請問該如何稱呼您？</p>
             <input type="text" id="intro-nickname" placeholder="輸入您的暱稱..." class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white outline-none mb-4 text-center text-lg">
             <button onclick="saveIntroNickname()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition-all transform hover:scale-105">開始使用</button>
         </div>
     </div>
 
-    <!-- Version History -->
+    <!-- Version Modal -->
     <div id="version-modal" class="fixed inset-0 bg-black bg-opacity-50 z-modal hidden flex items-center justify-center">
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[80vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
@@ -309,23 +290,19 @@
             </div>
             <div class="space-y-4">
                 <div class="relative pl-4 border-l-2 border-green-500">
-                    <div class="text-xs text-green-600 font-bold mb-1">v2.3.0 - 2025/11/22</div>
-                    <p class="text-sm text-gray-700 dark:text-gray-300">1. 新增對話重新命名功能。<br>2. 完整帳號備份與匯入 (ZIP)。<br>3. 新增「分享給他人」功能 (自動隱藏 Key)。<br>4. 系統全自動儲存，無需手動按鈕。</p>
+                    <div class="text-xs text-green-600 font-bold mb-1">v2.5.0 - 2025/11/22</div>
+                    <p class="text-sm text-gray-700 dark:text-gray-300">1. 優化寫作流程：開場白 -> 檔案卡片 -> 結尾說明。<br>2. 新增「停止生成」按鈕。<br>3. 自動標題字數限制優化 (1-15字)。<br>4. 設定頁顯示目前版本。</p>
                 </div>
                 <div class="relative pl-4 border-l-2 border-gray-300 dark:border-gray-600">
-                    <div class="text-xs text-gray-500 font-bold mb-1">v2.2.0</div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">BAT/自訂程式格式、文件/程式碼彈出視窗、Canvas 預覽。</p>
-                </div>
-                <div class="relative pl-4 border-l-2 border-gray-300 dark:border-gray-600">
-                    <div class="text-xs text-gray-500 font-bold mb-1">v2.1.0</div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">側邊欄管理、自動命名、個人化歡迎頁。</p>
+                    <div class="text-xs text-gray-500 font-bold mb-1">v1.0.0 - 初始版本</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">基礎對話功能、Markdown 支援。</p>
                 </div>
             </div>
             <button onclick="closeVersionModal()" class="w-full mt-6 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 py-2 rounded-lg text-sm">關閉</button>
         </div>
     </div>
 
-    <!-- Error Toast -->
+    <!-- Toast -->
     <div id="error-toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-2xl shadow-lg transition-all duration-300 opacity-0 pointer-events-none z-modal text-sm"></div>
 
     <script>
@@ -333,6 +310,8 @@
         let sessions = []; 
         let currentSessionId = null; 
         let currentImageBase64 = null; 
+        let abortController = null;
+        let isGenerating = false;
         let userConfig = { apiKey: '', nickname: '', theme: 'light', font: 'font-tw-kaiti' };
 
         // --- Elements ---
@@ -363,33 +342,17 @@
 
         const TOOL_CONFIG = {
             'general': { label: '一般', modes: [{value:'chat', label:'💬 閒聊'}, {value:'summarize', label:'📝 摘要'}] },
-            'writing': { label: '寫作', modes: [{value:'write_doc', label:'📄 撰寫文件 (Word)'}, {value:'discuss', label:'💬 寫作討論'}, {value:'guide', label:'🧭 寫作指導'}] },
-            'coding': { 
-                label: '程式', 
-                modes: [
-                    {value:'web_canvas', label:'🌐 Web/Canvas'}, 
-                    {value:'python', label:'🐍 Python'}, 
-                    {value:'bat', label:'🦇 BAT (批次檔)'}, 
-                    {value:'general_code', label:'💻 一般程式'},
-                    {value:'custom', label:'✨ 自訂格式'}
-                ] 
-            },
-            'math': { label: '數學', modes: [{value:'solve', label:'🔢 解題'}, {value:'explain', label:'📐 觀念'}] },
+            'writing': { label: '寫作', modes: [{value:'write_doc', label:'📄 撰寫文件'}, {value:'discuss', label:'💬 寫作討論'}, {value:'guide', label:'🧭 寫作指導'}] },
+            'coding': { label: '程式', modes: [{value:'web_canvas', label:'🌐 Web/Canvas'}, {value:'python', label:'🐍 Python'}, {value:'bat', label:'🦇 BAT'}, {value:'general_code', label:'💻 一般程式'}, {value:'custom', label:'✨ 自訂'}] },
+            'math': { label: '數學', modes: [{value:'solve', label:'🔢 解題'}] },
             'research': { label: '研究', modes: [{value:'search', label:'🔍 查資料'}] }
         };
 
         // --- Init ---
         window.addEventListener('DOMContentLoaded', () => {
-            loadUserConfig();
-            loadSessions();
-            updateModeOptions();
-            if (!userConfig.nickname) {
-                document.getElementById('nickname-modal').classList.remove('hidden');
-                document.getElementById('intro-nickname').focus();
-            } else {
-                updateNicknameDisplay();
-                renderHomeView();
-            }
+            loadUserConfig(); loadSessions(); updateModeOptions();
+            if (!userConfig.nickname) { document.getElementById('nickname-modal').classList.remove('hidden'); document.getElementById('intro-nickname').focus(); }
+            else { updateNicknameDisplay(); renderHomeView(); }
         });
 
         // --- Logic ---
@@ -399,15 +362,11 @@
             userConfig.theme = localStorage.getItem('panda_theme') || 'light';
             userConfig.font = localStorage.getItem('panda_font_pref') || 'font-tw-kaiti';
             if (userConfig.theme === 'dark') document.documentElement.classList.add('dark');
-            ELEMENTS.apiKeyInput.value = userConfig.apiKey;
-            ELEMENTS.settingNickname.value = userConfig.nickname;
-            ELEMENTS.fontSelect.value = userConfig.font;
+            ELEMENTS.apiKeyInput.value = userConfig.apiKey; ELEMENTS.settingNickname.value = userConfig.nickname; ELEMENTS.fontSelect.value = userConfig.font;
         }
         function saveUserConfig() {
-            localStorage.setItem('panda_api_key', userConfig.apiKey);
-            localStorage.setItem('panda_nickname', userConfig.nickname);
-            localStorage.setItem('panda_theme', userConfig.theme);
-            localStorage.setItem('panda_font_pref', userConfig.font);
+            localStorage.setItem('panda_api_key', userConfig.apiKey); localStorage.setItem('panda_nickname', userConfig.nickname);
+            localStorage.setItem('panda_theme', userConfig.theme); localStorage.setItem('panda_font_pref', userConfig.font);
             updateNicknameDisplay();
         }
         function loadSessions() { try { sessions = JSON.parse(localStorage.getItem('panda_sessions')) || []; sessions.sort((a, b) => b.timestamp - a.timestamp); renderSessionList(); } catch { sessions = []; } }
@@ -415,148 +374,85 @@
         function saveIntroNickname() { const val = document.getElementById('intro-nickname').value.trim(); if(!val)return; userConfig.nickname = val; saveUserConfig(); document.getElementById('nickname-modal').classList.add('hidden'); renderHomeView(); }
         function updateNicknameDisplay() { ELEMENTS.homeNickname.innerText = userConfig.nickname || '使用者'; ELEMENTS.sidebarNickname.innerText = userConfig.nickname || '使用者'; ELEMENTS.settingNickname.value = userConfig.nickname || ''; }
 
-        // --- Import / Export (ZIP) ---
+        // --- Import/Export ---
         function exportAccount(type) {
-            const zip = new JSZip();
-            
-            // Clone config to avoid modifying the live object
-            const configToExport = { ...userConfig };
-            
-            // Security: Remove API Key if sharing
-            if (type === 'share') {
-                configToExport.apiKey = "";
-                configToExport.nickname = ""; // Optional: Clear nickname for privacy too? Let's keep nickname as sender signature, but clear API key is mandatory.
-            }
-
-            const exportData = {
-                config: configToExport,
-                sessions: sessions,
-                exportDate: new Date().toISOString(),
-                type: type
-            };
-
-            zip.file("pandapanda_data.json", JSON.stringify(exportData, null, 2));
-
-            zip.generateAsync({type:"blob"}).then(function(content) {
-                const a = document.createElement("a");
-                a.href = URL.createObjectURL(content);
-                const filename = type === 'share' ? `pandapanda_share_${Date.now()}.zip` : `pandapanda_backup_${Date.now()}.zip`;
-                a.download = filename;
-                a.click();
-                showToast(type === 'share' ? "分享檔已下載 (不含 API Key)" : "備份檔已下載");
+            const zip = new JSZip(); const configToExport = { ...userConfig }; if (type === 'share') configToExport.apiKey = "";
+            const exportData = { config: configToExport, sessions: sessions, type: type };
+            zip.file("pandapanda_data.json", JSON.stringify(exportData));
+            zip.generateAsync({type:"blob"}).then(content => {
+                const a = document.createElement("a"); a.href = URL.createObjectURL(content); a.download = `panda_${type}_${Date.now()}.zip`; a.click();
+                showToast(type === 'share' ? "分享檔已下載" : "備份檔已下載");
             });
         }
-
         function importAccount(input) {
-            const file = input.files[0];
-            if (!file) return;
-
-            JSZip.loadAsync(file).then(function(zip) {
-                if (zip.file("pandapanda_data.json")) {
-                    return zip.file("pandapanda_data.json").async("string");
-                } else {
-                    throw new Error("無效的備份檔：找不到資料");
+            const file = input.files[0]; if (!file) return;
+            JSZip.loadAsync(file).then(zip => zip.file("pandapanda_data.json").async("string")).then(content => {
+                const data = JSON.parse(content);
+                if (confirm("匯入將覆蓋現有資料，確定？")) {
+                    if (data.type === 'share' && userConfig.apiKey) { userConfig.nickname = data.config.nickname; userConfig.theme = data.config.theme; userConfig.font = data.config.font; } else { userConfig = data.config; }
+                    sessions = data.sessions || []; saveUserConfig(); saveSessions();
+                    if (userConfig.theme === 'dark') document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark');
+                    startNewChat(); closeSettings(); showToast("匯入成功");
                 }
-            }).then(function(content) {
-                try {
-                    const data = JSON.parse(content);
-                    
-                    if (confirm("確定要匯入嗎？這將會覆蓋目前的設定與對話紀錄。")) {
-                        // Restore Config (If sharing type, don't overwrite local API key if exists)
-                        if (data.type === 'share' && userConfig.apiKey) {
-                            // Keep local API key, restore other settings
-                            userConfig.nickname = data.config.nickname || userConfig.nickname; // Keep existing if imported is empty
-                            userConfig.theme = data.config.theme;
-                            userConfig.font = data.config.font;
-                        } else {
-                            // Full restore (Backup type)
-                            userConfig = data.config;
-                        }
-                        
-                        // Restore Sessions
-                        sessions = data.sessions || [];
-                        
-                        // Save & Reload
-                        saveUserConfig();
-                        saveSessions();
-                        
-                        // Apply Theme
-                        if (userConfig.theme === 'dark') document.documentElement.classList.add('dark');
-                        else document.documentElement.classList.remove('dark');
-                        
-                        // Reset UI
-                        startNewChat();
-                        closeSettings();
-                        showToast("匯入成功！");
-                    }
-                } catch (e) {
-                    showToast("匯入失敗：檔案格式錯誤");
-                    console.error(e);
-                }
-            }).catch(function(e) {
-                showToast("匯入失敗：" + e.message);
-            });
-            input.value = ''; // Reset input
+            }).catch(e => showToast("匯入失敗")); input.value = '';
         }
 
-        // --- UI Render ---
-        function renderHomeView() {
-            currentSessionId = null;
-            ELEMENTS.homeView.classList.remove('hidden');
-            ELEMENTS.chatContainer.classList.add('hidden');
-            ELEMENTS.chatContainer.innerHTML = '';
-            document.querySelectorAll('.session-item').forEach(el => el.classList.remove('bg-gray-100', 'dark:bg-gray-700'));
-        }
-        function renderChatView(session) {
-            currentSessionId = session.id;
-            ELEMENTS.homeView.classList.add('hidden');
-            ELEMENTS.chatContainer.classList.remove('hidden');
-            ELEMENTS.chatContainer.innerHTML = '';
-            session.messages.forEach(msg => ELEMENTS.chatContainer.appendChild(createMessageElement(msg)));
-            scrollToBottom();
-            renderSessionList();
-        }
+        // --- UI ---
+        function renderHomeView() { currentSessionId = null; ELEMENTS.homeView.classList.remove('hidden'); ELEMENTS.chatContainer.classList.add('hidden'); ELEMENTS.chatContainer.innerHTML = ''; document.querySelectorAll('.session-item').forEach(el => el.classList.remove('bg-gray-100', 'dark:bg-gray-700')); }
+        function renderChatView(session) { currentSessionId = session.id; ELEMENTS.homeView.classList.add('hidden'); ELEMENTS.chatContainer.classList.remove('hidden'); ELEMENTS.chatContainer.innerHTML = ''; session.messages.forEach(msg => ELEMENTS.chatContainer.appendChild(createMessageElement(msg))); scrollToBottom(); renderSessionList(); }
         function renderSessionList() {
             ELEMENTS.sessionList.innerHTML = '';
             sessions.forEach(session => {
                 const isActive = session.id === currentSessionId;
                 const div = document.createElement('div');
                 div.className = `session-item p-2.5 rounded-lg cursor-pointer flex items-center gap-2 text-sm truncate transition-colors group relative ${isActive ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`;
-                div.innerHTML = `
-                    <i class="far fa-comment-alt shrink-0"></i>
-                    <span class="truncate flex-1" ondblclick="renameSession('${session.id}', event)">${session.title}</span>
-                    <div class="hidden group-hover:flex items-center gap-1 bg-white dark:bg-gray-800 shadow-sm rounded px-1 absolute right-1 top-1/2 transform -translate-y-1/2">
-                        <button onclick="renameSession('${session.id}', event)" class="text-gray-400 hover:text-blue-500 p-1"><i class="fas fa-pen"></i></button>
-                        <button onclick="deleteSession('${session.id}', event)" class="text-gray-400 hover:text-red-500 p-1"><i class="fas fa-trash"></i></button>
-                    </div>
-                `;
+                div.innerHTML = `<i class="far fa-comment-alt shrink-0"></i><span class="truncate flex-1" ondblclick="renameSession('${session.id}', event)">${session.title}</span><div class="hidden group-hover:flex items-center gap-1 bg-white dark:bg-gray-800 shadow-sm rounded px-1 absolute right-1 top-1/2 transform -translate-y-1/2"><button onclick="renameSession('${session.id}', event)" class="text-gray-400 hover:text-blue-500 p-1"><i class="fas fa-pen"></i></button><button onclick="deleteSession('${session.id}', event)" class="text-gray-400 hover:text-red-500 p-1"><i class="fas fa-trash"></i></button></div>`;
                 div.onclick = (e) => { if(!e.target.closest('button') && !e.target.closest('input')) loadSession(session.id); };
                 ELEMENTS.sessionList.appendChild(div);
             });
         }
         function startNewChat() { renderHomeView(); if(window.innerWidth < 768) toggleSidebar(); }
         function loadSession(id) { const s = sessions.find(x => x.id === id); if(s) { renderChatView(s); if(window.innerWidth < 768) toggleSidebar(); } }
-        
-        function renameSession(id, e) {
-            if(e) e.stopPropagation();
-            const session = sessions.find(s => s.id === id);
-            if (!session) return;
-            const newName = prompt("請輸入新的對話名稱：", session.title);
-            if (newName && newName.trim()) {
-                session.title = newName.trim();
-                saveSessions();
+        function renameSession(id, e) { if(e) e.stopPropagation(); const s = sessions.find(x => x.id === id); if(s) { const n = prompt("新標題:", s.title); if(n && n.trim()) { s.title = n.trim(); saveSessions(); } } }
+        function deleteSession(id, e) { if(e)e.stopPropagation(); if(!confirm("刪除？"))return; sessions = sessions.filter(s=>s.id!==id); saveSessions(); if(currentSessionId===id) startNewChat(); }
+        function clearChat() { if(currentSessionId) deleteSession(currentSessionId); else { if(!confirm("清除所有？"))return; sessions=[]; saveSessions(); startNewChat(); } closeSettings(); }
+
+        // --- Core Logic ---
+        function handleSendAction() {
+            if (isGenerating) {
+                if (abortController) abortController.abort();
+                isGenerating = false;
+                updateSendBtnState();
+                const loading = document.getElementById('loading-indicator');
+                if (loading) loading.remove();
+                showToast("已停止生成");
+            } else {
+                handleSend();
             }
         }
 
-        function deleteSession(id, e) { if(e)e.stopPropagation(); if(!confirm("確定刪除此對話？"))return; sessions = sessions.filter(s=>s.id!==id); saveSessions(); if(currentSessionId===id) startNewChat(); }
-        function clearChat() { if(currentSessionId) deleteSession(currentSessionId); else { if(!confirm("清除所有？"))return; sessions=[]; saveSessions(); startNewChat(); } closeSettings(); }
+        function updateSendBtnState() {
+            if (isGenerating) {
+                ELEMENTS.sendBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                ELEMENTS.sendBtn.classList.add('bg-red-500', 'hover:bg-red-600');
+                ELEMENTS.sendBtn.innerHTML = '<i class="fas fa-stop"></i>';
+            } else {
+                ELEMENTS.sendBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
+                ELEMENTS.sendBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                ELEMENTS.sendBtn.innerHTML = '<i class="fas fa-paper-plane text-sm"></i>';
+                ELEMENTS.sendBtn.disabled = false;
+            }
+        }
 
-        // --- Chat Logic ---
         async function handleSend() {
             const apiKey = userConfig.apiKey;
             if (!apiKey) { openSettings(); showToast("請先輸入 API Key"); return; }
             const text = ELEMENTS.inputBox.value.trim();
             if (!text && !currentImageBase64) return;
+
+            isGenerating = true;
+            updateSendBtnState();
+            abortController = new AbortController();
 
             const tool = ELEMENTS.toolSelect.value;
             const mode = ELEMENTS.modeSelect.value;
@@ -572,7 +468,6 @@
             const imgToSend = currentImageBase64;
             clearImage();
             ELEMENTS.inputBox.value = '';
-            ELEMENTS.sendBtn.disabled = true;
 
             const loading = document.createElement('div');
             loading.id = 'loading-indicator';
@@ -590,14 +485,14 @@
                 const systemPrompt = getSystemPrompt(tool, mode, customType);
                 const contents = [
                     { role: "user", parts: [{ text: systemPrompt }] },
-                    { role: "model", parts: [{ text: "收到，我是PandaPanda。" }] },
+                    { role: "model", parts: [{ text: "收到，我是PandaPanda。我會遵守結構：開場白 -> 檔案 -> 結尾。" }] },
                     ...historyContext
                 ];
                 const parts = [{ text: text }];
                 if (imgToSend) parts.push({ inline_data: { mime_type: imgToSend.split(';')[0].split(':')[1], data: imgToSend.split(',')[1] } });
                 contents.push({ role: "user", parts: parts });
 
-                const responseText = await callGeminiAPI(apiKey, contents, modelLevel);
+                const responseText = await callGeminiAPI(apiKey, contents, modelLevel, abortController.signal);
                 loading.remove();
                 
                 const aiMsg = { sender: 'panda', text: responseText, tool: tool, mode: mode, customType: customType };
@@ -616,14 +511,18 @@
                     if (session) { session.messages.push(userMsg); session.messages.push(aiMsg); session.timestamp = Date.now(); sessions.sort((a, b) => b.timestamp - a.timestamp); saveSessions(); }
                 }
             } catch (error) {
-                loading.remove(); showToast("錯誤: " + error.message);
+                loading.remove();
+                if (error.name !== 'AbortError') showToast("錯誤: " + error.message);
                 if (!currentSessionId) { ELEMENTS.chatContainer.innerHTML = ''; renderHomeView(); }
-            } finally { ELEMENTS.sendBtn.disabled = false; }
+            } finally {
+                isGenerating = false;
+                updateSendBtnState();
+            }
         }
 
-        async function callGeminiAPI(key, contents, level) {
+        async function callGeminiAPI(key, contents, level, signal) {
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${key}`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: signal,
                 body: JSON.stringify({ contents: contents, generationConfig: { temperature: level === 'pro' ? 0.7 : 0.9, maxOutputTokens: 8000 } })
             });
             if (!res.ok) throw new Error((await res.json()).error?.message || "API Error");
@@ -632,14 +531,13 @@
 
         async function generateAutoTitle(apiKey, userText, aiText, sessionId) {
             try {
-                const prompt = `請根據以下對話，生成4-8個繁體中文字的標題。不含符號。\n使用者：${userText.substring(0,50)}\nAI：${aiText.substring(0,50)}`;
+                const prompt = `請根據以下對話，生成一個「1到15個繁體中文字」的標題。不要符號。\n使用者：${userText.substring(0,50)}\nAI：${aiText.substring(0,50)}`;
                 const title = await callGeminiAPI(apiKey, [{ role: "user", parts: [{ text: prompt }] }], 'flash');
                 const session = sessions.find(s => s.id === sessionId);
                 if (session) { session.title = title.replace(/\n/g, '').trim().substring(0, 15); saveSessions(); }
             } catch (e) {}
         }
 
-        // --- Message Element ---
         function createMessageElement(msg) {
             const isUser = msg.sender === 'user';
             const wrapper = document.createElement('div');
@@ -651,55 +549,67 @@
             if(!isUser) avatar.onerror = () => avatar.src='https://api.iconify.design/noto:panda.svg';
 
             const contentDiv = document.createElement('div');
+            contentDiv.className = `p-4 rounded-2xl shadow-sm border max-w-[95%] md:max-w-[85%] overflow-hidden ${isUser ? 'bg-green-600 text-white rounded-tr-none' : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-tl-none border-gray-200 dark:border-gray-700 markdown-body'}`;
             
-            const isDoc = !isUser && msg.tool === 'writing' && msg.mode === 'write_doc';
-            const isCode = !isUser && msg.tool === 'coding';
-
-            if (isDoc) {
-                contentDiv.innerHTML = `
-                    <div class="doc-card" onclick="openPreviewModal('doc', \`${encodeURIComponent(msg.text)}\`)">
-                        <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-2xl shrink-0"><i class="fas fa-file-word"></i></div>
-                        <div><div class="font-bold text-gray-800 dark:text-gray-200">文件已生成</div><div class="text-xs text-gray-500 dark:text-gray-400">點擊閱讀</div></div>
-                    </div>`;
-            } else if (isCode) {
-                contentDiv.innerHTML = `
-                    <div class="doc-card" onclick="openPreviewModal('code', \`${encodeURIComponent(msg.text)}\`, '${msg.mode}')">
-                        <div class="w-12 h-12 bg-gray-800 text-green-400 rounded-lg flex items-center justify-center text-2xl shrink-0"><i class="fas fa-code"></i></div>
-                        <div><div class="font-bold text-gray-800 dark:text-gray-200">程式碼已生成</div><div class="text-xs text-gray-500 dark:text-gray-400">點擊查看與執行</div></div>
-                        <i class="fas fa-external-link-alt text-gray-400 ml-auto"></i>
-                    </div>`;
+            if (msg.image) contentDiv.innerHTML += `<img src="${msg.image}" class="max-w-full h-auto rounded-lg mb-2 max-h-64 object-contain">`;
+            
+            if (isUser) {
+                contentDiv.innerText = msg.text;
             } else {
-                contentDiv.className = `p-4 rounded-2xl shadow-sm border max-w-[90%] md:max-w-[80%] overflow-hidden ${isUser ? 'bg-green-600 text-white rounded-tr-none' : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-tl-none border-gray-200 dark:border-gray-700 markdown-body'}`;
-                if (msg.image) contentDiv.innerHTML += `<img src="${msg.image}" class="max-w-full h-auto rounded-lg mb-2 max-h-64 object-contain">`;
-                const textDiv = document.createElement('div');
-                if (isUser) textDiv.innerText = msg.text;
-                else textDiv.innerHTML = marked.parse(msg.text);
-                contentDiv.appendChild(textDiv);
+                // Intelligent Rendering: Detect Code Blocks and Convert to Cards
+                let html = marked.parse(msg.text);
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                
+                // Find pre tags generated by marked and replace with cards
+                const codeBlocks = tempDiv.querySelectorAll('pre code');
+                codeBlocks.forEach(block => {
+                    const codeContent = block.innerText;
+                    const lang = block.className.replace('language-', '') || 'Code';
+                    const card = document.createElement('div');
+                    
+                    // Determine type for preview
+                    const isWeb = lang.includes('html') || lang.includes('xml') || msg.mode === 'web_canvas';
+                    
+                    card.className = "embedded-file-card group";
+                    card.innerHTML = `
+                        <div class="w-10 h-10 ${isWeb ? 'bg-orange-100 text-orange-600' : 'bg-gray-800 text-green-400'} rounded-lg flex items-center justify-center text-xl shrink-0">
+                            <i class="fas ${isWeb ? 'fa-globe' : 'fa-code'}"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-bold text-sm text-gray-800 dark:text-gray-200 truncate">${isWeb ? '網頁檔案 (HTML)' : '程式碼檔案'}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">點擊查看內容</div>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400 group-hover:text-gray-600"></i>
+                    `;
+                    card.onclick = () => openPreviewModal('code', encodeURIComponent(codeContent), msg.mode);
+                    
+                    // Replace the parent <pre> with the card
+                    block.parentElement.replaceWith(card);
+                });
+                
+                contentDiv.innerHTML = tempDiv.innerHTML;
             }
+            
             wrapper.appendChild(avatar);
             wrapper.appendChild(contentDiv);
             return wrapper;
         }
 
-        // --- Preview Modal ---
+        // --- Preview ---
         function openPreviewModal(type, content, mode = '') {
             ELEMENTS.previewModal.classList.remove('hidden');
             ELEMENTS.previewBody.innerHTML = '';
             const decoded = decodeURIComponent(content);
 
-            if (type === 'doc') {
-                ELEMENTS.previewTitle.innerText = "文件檢視";
-                ELEMENTS.previewBadge.innerText = "DOC";
-                ELEMENTS.runCodeBtn.classList.add('hidden');
-                const paper = document.createElement('div');
-                paper.className = `document-paper shadow-lg ${userConfig.font}`;
-                paper.innerText = decoded;
-                ELEMENTS.previewBody.appendChild(paper);
-            } else if (type === 'code') {
+            if (type === 'doc') { /* ... (Doc rendering logic if needed later) ... */ } 
+            else {
                 ELEMENTS.previewTitle.innerText = "程式碼檢視";
-                ELEMENTS.previewBadge.innerText = mode.toUpperCase();
-                if (mode === 'web_canvas' || decoded.includes('html')) {
+                ELEMENTS.previewBadge.innerText = (mode || 'CODE').toUpperCase();
+                
+                if (mode === 'web_canvas' || decoded.includes('<html')) {
                     ELEMENTS.runCodeBtn.classList.remove('hidden');
+                    ELEMENTS.runCodeBtn.innerHTML = '<i class="fas fa-play"></i> 執行/預覽';
                     ELEMENTS.runCodeBtn.onclick = () => runCodeInFrame(decoded);
                 } else {
                     ELEMENTS.runCodeBtn.classList.remove('hidden');
@@ -718,9 +628,7 @@
             ELEMENTS.previewBody.innerHTML = '';
             const iframe = document.createElement('iframe');
             iframe.className = "w-full h-full bg-white border rounded-lg";
-            let cleanCode = code;
-            if (code.includes('```')) { cleanCode = code.replace(/```html|```/g, ''); }
-            const blob = new Blob([cleanCode], {type: 'text/html'});
+            const blob = new Blob([code], {type: 'text/html'});
             iframe.src = URL.createObjectURL(blob);
             ELEMENTS.previewBody.appendChild(iframe);
         }
@@ -731,8 +639,14 @@
         }
 
         function getSystemPrompt(tool, mode, customType) {
-            let p = `你現在是 PandaPanda AI。最高原則：1. 寫作嚴禁Markdown粗體(**)和分隔線。2. 程式碼必須完整。3. 繁體中文回答。4. 身分是PandaPanda，不可承認是Gemini。`;
-            if (tool === 'writing' && mode === 'write_doc') p += `\n[模式：文件] 產出Word格式正式文件。`;
+            let p = `你現在是 PandaPanda AI。
+最高原則：
+1. 回應結構必須是：[簡短開場白 (如：這是您的程式碼...)] -> [程式碼區塊/文件內容] -> [結尾說明]。
+2. 寫作模式嚴禁Markdown粗體(**)和分隔線。
+3. 程式碼必須完整，不可跳過。
+4. 繁體中文回答。
+5. 身分是PandaPanda，不可承認是Gemini。`;
+            if (tool === 'writing' && mode === 'write_doc') p += `\n[模式：文件] 請直接將整篇文章放在一個 markdown code block 中以便渲染為檔案。`;
             else if (tool === 'coding') {
                 if (mode === 'web_canvas') p += `\n[模式：Web] 給出單一HTML檔案含CSS/JS，完整可執行。`;
                 else if (mode === 'bat') p += `\n[模式：BAT] 請撰寫 Windows Batch 批次檔腳本。`;
@@ -748,16 +662,13 @@
             ELEMENTS.modeSelect.innerHTML = TOOL_CONFIG[t].modes.map(m=>`<option value="${m.value}">${m.label}</option>`).join('');
             toggleCustomInput();
         }
-        function toggleCustomInput() {
-            if (ELEMENTS.modeSelect.value === 'custom') ELEMENTS.customModeInput.classList.remove('hidden');
-            else ELEMENTS.customModeInput.classList.add('hidden');
-        }
+        function toggleCustomInput() { if (ELEMENTS.modeSelect.value === 'custom') ELEMENTS.customModeInput.classList.remove('hidden'); else ELEMENTS.customModeInput.classList.add('hidden'); }
         function toggleSidebar() { ELEMENTS.sidebar.classList.toggle('-translate-x-full'); }
         function toggleTheme() { document.documentElement.classList.toggle('dark'); userConfig.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light'; saveUserConfig(); }
         function handleFileSelect(inp) { const f = inp.files[0]; if(!f) return; const r = new FileReader(); r.onload=e=>{ currentImageBase64=e.target.result; document.getElementById('image-preview-area').classList.remove('hidden'); document.getElementById('preview-img').src=currentImageBase64; }; r.readAsDataURL(f); inp.value=''; }
         function clearImage() { currentImageBase64=null; document.getElementById('image-preview-area').classList.add('hidden'); }
         function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,160)+'px'; }
-        function handleKeyDown(e) { if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }
+        function handleKeyDown(e) { if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); handleSendAction(); } }
         function showToast(m) { ELEMENTS.errorToast.innerText=m; ELEMENTS.errorToast.classList.remove('opacity-0','pointer-events-none'); setTimeout(()=>ELEMENTS.errorToast.classList.add('opacity-0'),3000); }
         function scrollToBottom() { ELEMENTS.chatContainer.scrollTo({top:99999, behavior:'smooth'}); }
         function openSettings() { document.getElementById('settings-modal').classList.remove('hidden'); ELEMENTS.settingNickname.value = userConfig.nickname; ELEMENTS.apiKeyInput.value = userConfig.apiKey; ELEMENTS.fontSelect.value = userConfig.font; setTimeout(()=>document.getElementById('settings-modal-content').classList.remove('scale-95','opacity-0'),10); }
