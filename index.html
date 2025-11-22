@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PandaPanda AI - 專業工作站</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -50,7 +51,7 @@
         .markdown-body code { background-color: rgba(0,0,0,0.05); padding: 0.2em 0.4em; border-radius: 0.25em; font-family: inherit; }
         .dark .markdown-body code:not(pre code) { background-color: rgba(255,255,255,0.1); }
 
-        /* 文件卡片 (通用) */
+        /* 文件卡片 */
         .doc-card {
             background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1rem;
             display: flex; align-items: center; gap: 1rem; transition: all 0.2s; cursor: pointer;
@@ -216,7 +217,6 @@
                     <span id="preview-type-badge" class="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300">DOC</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <!-- Run/Preview Button for Code -->
                     <button id="run-code-btn" class="hidden bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-1">
                         <i class="fas fa-play"></i> 執行/預覽
                     </button>
@@ -245,7 +245,7 @@
                 </div>
 
                 <!-- System Settings -->
-                <div>
+                <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
                     <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">系統設定</h3>
                     <div class="mb-3">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">API Key</label>
@@ -261,13 +261,30 @@
                     </div>
                 </div>
 
+                <!-- Account Management (Export/Import) -->
+                <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
+                    <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">備份與分享</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="exportAccount('self')" class="py-2 bg-gray-100 dark:bg-gray-700 hover:bg-green-50 dark:hover:bg-green-900/20 text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 rounded-lg text-sm flex items-center justify-center gap-1 border border-transparent hover:border-green-200 dark:hover:border-green-800 transition-all">
+                            <i class="fas fa-archive"></i> 備份給自己
+                        </button>
+                        <button onclick="exportAccount('share')" class="py-2 bg-gray-100 dark:bg-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg text-sm flex items-center justify-center gap-1 border border-transparent hover:border-blue-200 dark:hover:border-blue-800 transition-all">
+                            <i class="fas fa-gift"></i> 分享給他人
+                        </button>
+                    </div>
+                    <label class="mt-2 flex items-center justify-center w-full py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm cursor-pointer transition-colors">
+                        <i class="fas fa-file-import mr-2"></i> 匯入備份檔 (ZIP)
+                        <input type="file" class="hidden" accept=".zip" onchange="importAccount(this)">
+                    </label>
+                </div>
+
                 <!-- Data & Version -->
                 <div class="flex gap-2 pt-2">
                     <button onclick="showVersionHistory()" class="flex-1 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-sm hover:bg-blue-100 dark:hover:bg-blue-900/40">版本紀錄</button>
-                    <button onclick="clearChat()" class="flex-1 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm hover:bg-red-100 dark:hover:bg-red-900/40">刪除對話</button>
+                    <button onclick="clearChat()" class="flex-1 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm hover:bg-red-100 dark:hover:bg-red-900/40">清除資料</button>
                 </div>
 
-                <button onclick="saveSettingsAndClose()" class="w-full bg-green-600 text-white font-medium py-2.5 rounded-lg">儲存設定</button>
+                <button onclick="saveSettingsAndClose()" class="w-full bg-green-600 text-white font-medium py-2.5 rounded-lg mt-2">儲存設定</button>
             </div>
         </div>
     </div>
@@ -292,12 +309,16 @@
             </div>
             <div class="space-y-4">
                 <div class="relative pl-4 border-l-2 border-green-500">
-                    <div class="text-xs text-green-600 font-bold mb-1">v2.2.0 - 2025/11/22</div>
-                    <p class="text-sm text-gray-700 dark:text-gray-300">1. 新增 BAT 與自訂格式程式開發支援。<br>2. 程式碼改為文件卡片形式，支援彈出式視窗檢視。<br>3. 彈出視窗內建執行/預覽按鈕。</p>
+                    <div class="text-xs text-green-600 font-bold mb-1">v2.3.0 - 2025/11/22</div>
+                    <p class="text-sm text-gray-700 dark:text-gray-300">1. 新增對話重新命名功能。<br>2. 完整帳號備份與匯入 (ZIP)。<br>3. 新增「分享給他人」功能 (自動隱藏 Key)。<br>4. 系統全自動儲存，無需手動按鈕。</p>
+                </div>
+                <div class="relative pl-4 border-l-2 border-gray-300 dark:border-gray-600">
+                    <div class="text-xs text-gray-500 font-bold mb-1">v2.2.0</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">BAT/自訂程式格式、文件/程式碼彈出視窗、Canvas 預覽。</p>
                 </div>
                 <div class="relative pl-4 border-l-2 border-gray-300 dark:border-gray-600">
                     <div class="text-xs text-gray-500 font-bold mb-1">v2.1.0</div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">新增側邊欄與自動命名。</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">側邊欄管理、自動命名、個人化歡迎頁。</p>
                 </div>
             </div>
             <button onclick="closeVersionModal()" class="w-full mt-6 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 py-2 rounded-lg text-sm">關閉</button>
@@ -311,7 +332,7 @@
         // --- State ---
         let sessions = []; 
         let currentSessionId = null; 
-        let currentImageBase64 = null; // Fixed: Initialized
+        let currentImageBase64 = null; 
         let userConfig = { apiKey: '', nickname: '', theme: 'light', font: 'font-tw-kaiti' };
 
         // --- Elements ---
@@ -394,6 +415,90 @@
         function saveIntroNickname() { const val = document.getElementById('intro-nickname').value.trim(); if(!val)return; userConfig.nickname = val; saveUserConfig(); document.getElementById('nickname-modal').classList.add('hidden'); renderHomeView(); }
         function updateNicknameDisplay() { ELEMENTS.homeNickname.innerText = userConfig.nickname || '使用者'; ELEMENTS.sidebarNickname.innerText = userConfig.nickname || '使用者'; ELEMENTS.settingNickname.value = userConfig.nickname || ''; }
 
+        // --- Import / Export (ZIP) ---
+        function exportAccount(type) {
+            const zip = new JSZip();
+            
+            // Clone config to avoid modifying the live object
+            const configToExport = { ...userConfig };
+            
+            // Security: Remove API Key if sharing
+            if (type === 'share') {
+                configToExport.apiKey = "";
+                configToExport.nickname = ""; // Optional: Clear nickname for privacy too? Let's keep nickname as sender signature, but clear API key is mandatory.
+            }
+
+            const exportData = {
+                config: configToExport,
+                sessions: sessions,
+                exportDate: new Date().toISOString(),
+                type: type
+            };
+
+            zip.file("pandapanda_data.json", JSON.stringify(exportData, null, 2));
+
+            zip.generateAsync({type:"blob"}).then(function(content) {
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(content);
+                const filename = type === 'share' ? `pandapanda_share_${Date.now()}.zip` : `pandapanda_backup_${Date.now()}.zip`;
+                a.download = filename;
+                a.click();
+                showToast(type === 'share' ? "分享檔已下載 (不含 API Key)" : "備份檔已下載");
+            });
+        }
+
+        function importAccount(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            JSZip.loadAsync(file).then(function(zip) {
+                if (zip.file("pandapanda_data.json")) {
+                    return zip.file("pandapanda_data.json").async("string");
+                } else {
+                    throw new Error("無效的備份檔：找不到資料");
+                }
+            }).then(function(content) {
+                try {
+                    const data = JSON.parse(content);
+                    
+                    if (confirm("確定要匯入嗎？這將會覆蓋目前的設定與對話紀錄。")) {
+                        // Restore Config (If sharing type, don't overwrite local API key if exists)
+                        if (data.type === 'share' && userConfig.apiKey) {
+                            // Keep local API key, restore other settings
+                            userConfig.nickname = data.config.nickname || userConfig.nickname; // Keep existing if imported is empty
+                            userConfig.theme = data.config.theme;
+                            userConfig.font = data.config.font;
+                        } else {
+                            // Full restore (Backup type)
+                            userConfig = data.config;
+                        }
+                        
+                        // Restore Sessions
+                        sessions = data.sessions || [];
+                        
+                        // Save & Reload
+                        saveUserConfig();
+                        saveSessions();
+                        
+                        // Apply Theme
+                        if (userConfig.theme === 'dark') document.documentElement.classList.add('dark');
+                        else document.documentElement.classList.remove('dark');
+                        
+                        // Reset UI
+                        startNewChat();
+                        closeSettings();
+                        showToast("匯入成功！");
+                    }
+                } catch (e) {
+                    showToast("匯入失敗：檔案格式錯誤");
+                    console.error(e);
+                }
+            }).catch(function(e) {
+                showToast("匯入失敗：" + e.message);
+            });
+            input.value = ''; // Reset input
+        }
+
         // --- UI Render ---
         function renderHomeView() {
             currentSessionId = null;
@@ -417,14 +522,33 @@
                 const isActive = session.id === currentSessionId;
                 const div = document.createElement('div');
                 div.className = `session-item p-2.5 rounded-lg cursor-pointer flex items-center gap-2 text-sm truncate transition-colors group relative ${isActive ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`;
-                div.innerHTML = `<i class="far fa-comment-alt shrink-0"></i><span class="truncate flex-1">${session.title}</span><button onclick="deleteSession('${session.id}', event)" class="opacity-0 group-hover:opacity-100 hover:text-red-500 px-1"><i class="fas fa-trash"></i></button>`;
-                div.onclick = (e) => { if(!e.target.closest('button')) loadSession(session.id); };
+                div.innerHTML = `
+                    <i class="far fa-comment-alt shrink-0"></i>
+                    <span class="truncate flex-1" ondblclick="renameSession('${session.id}', event)">${session.title}</span>
+                    <div class="hidden group-hover:flex items-center gap-1 bg-white dark:bg-gray-800 shadow-sm rounded px-1 absolute right-1 top-1/2 transform -translate-y-1/2">
+                        <button onclick="renameSession('${session.id}', event)" class="text-gray-400 hover:text-blue-500 p-1"><i class="fas fa-pen"></i></button>
+                        <button onclick="deleteSession('${session.id}', event)" class="text-gray-400 hover:text-red-500 p-1"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                div.onclick = (e) => { if(!e.target.closest('button') && !e.target.closest('input')) loadSession(session.id); };
                 ELEMENTS.sessionList.appendChild(div);
             });
         }
         function startNewChat() { renderHomeView(); if(window.innerWidth < 768) toggleSidebar(); }
         function loadSession(id) { const s = sessions.find(x => x.id === id); if(s) { renderChatView(s); if(window.innerWidth < 768) toggleSidebar(); } }
-        function deleteSession(id, e) { if(e)e.stopPropagation(); if(!confirm("確定刪除？"))return; sessions = sessions.filter(s=>s.id!==id); saveSessions(); if(currentSessionId===id) startNewChat(); }
+        
+        function renameSession(id, e) {
+            if(e) e.stopPropagation();
+            const session = sessions.find(s => s.id === id);
+            if (!session) return;
+            const newName = prompt("請輸入新的對話名稱：", session.title);
+            if (newName && newName.trim()) {
+                session.title = newName.trim();
+                saveSessions();
+            }
+        }
+
+        function deleteSession(id, e) { if(e)e.stopPropagation(); if(!confirm("確定刪除此對話？"))return; sessions = sessions.filter(s=>s.id!==id); saveSessions(); if(currentSessionId===id) startNewChat(); }
         function clearChat() { if(currentSessionId) deleteSession(currentSessionId); else { if(!confirm("清除所有？"))return; sessions=[]; saveSessions(); startNewChat(); } closeSettings(); }
 
         // --- Chat Logic ---
@@ -528,7 +652,6 @@
 
             const contentDiv = document.createElement('div');
             
-            // Check for Document Types (Doc or Code)
             const isDoc = !isUser && msg.tool === 'writing' && msg.mode === 'write_doc';
             const isCode = !isUser && msg.tool === 'coding';
 
@@ -539,7 +662,6 @@
                         <div><div class="font-bold text-gray-800 dark:text-gray-200">文件已生成</div><div class="text-xs text-gray-500 dark:text-gray-400">點擊閱讀</div></div>
                     </div>`;
             } else if (isCode) {
-                // Code Document Card
                 contentDiv.innerHTML = `
                     <div class="doc-card" onclick="openPreviewModal('code', \`${encodeURIComponent(msg.text)}\`, '${msg.mode}')">
                         <div class="w-12 h-12 bg-gray-800 text-green-400 rounded-lg flex items-center justify-center text-2xl shrink-0"><i class="fas fa-code"></i></div>
@@ -576,22 +698,14 @@
             } else if (type === 'code') {
                 ELEMENTS.previewTitle.innerText = "程式碼檢視";
                 ELEMENTS.previewBadge.innerText = mode.toUpperCase();
-                
-                // Setup "Run" button
                 if (mode === 'web_canvas' || decoded.includes('html')) {
                     ELEMENTS.runCodeBtn.classList.remove('hidden');
                     ELEMENTS.runCodeBtn.onclick = () => runCodeInFrame(decoded);
                 } else {
-                    // Non-web code (BAT, Python, etc)
                     ELEMENTS.runCodeBtn.classList.remove('hidden');
                     ELEMENTS.runCodeBtn.innerHTML = '<i class="fas fa-copy"></i> 複製程式碼';
-                    ELEMENTS.runCodeBtn.onclick = () => {
-                        navigator.clipboard.writeText(decoded);
-                        showToast("已複製到剪貼簿");
-                    };
+                    ELEMENTS.runCodeBtn.onclick = () => { navigator.clipboard.writeText(decoded); showToast("已複製"); };
                 }
-
-                // Show Source Code by default
                 const viewer = document.createElement('div');
                 viewer.className = "code-viewer shadow-inner";
                 viewer.innerText = decoded;
@@ -601,15 +715,11 @@
         }
 
         function runCodeInFrame(code) {
-            // Swap viewer with iframe
             ELEMENTS.previewBody.innerHTML = '';
             const iframe = document.createElement('iframe');
             iframe.className = "w-full h-full bg-white border rounded-lg";
-            // Extract code block if wrapped in markdown
             let cleanCode = code;
-            if (code.includes('```')) {
-                cleanCode = code.replace(/```html|```/g, '');
-            }
+            if (code.includes('```')) { cleanCode = code.replace(/```html|```/g, ''); }
             const blob = new Blob([cleanCode], {type: 'text/html'});
             iframe.src = URL.createObjectURL(blob);
             ELEMENTS.previewBody.appendChild(iframe);
