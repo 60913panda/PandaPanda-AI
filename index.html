@@ -44,7 +44,6 @@
         /* Markdown & Content */
         .markdown-body { font-size: 16px; line-height: 1.7; }
         .markdown-body p { margin-bottom: 0.75em; }
-        /* 隱藏原始 pre，由 JS 轉換為卡片，但在非代碼模式下仍需顯示 */
         .markdown-body pre { 
             background-color: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 0.5rem; 
             overflow-x: auto; margin: 1em 0; position: relative; font-family: monospace; 
@@ -55,10 +54,9 @@
         /* 文件/程式碼卡片 (嵌入在對話中) */
         .embedded-file-card {
             background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.75rem 1rem;
-            margin: 0.5rem 0;
+            margin: 0.75rem 0;
             display: flex; align-items: center; gap: 1rem; transition: all 0.2s; cursor: pointer;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            max-width: 100%;
         }
         .embedded-file-card:hover { transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-color: #cbd5e1; }
         .dark .embedded-file-card { background: #1e293b; border-color: #334155; }
