@@ -24,7 +24,8 @@
                     },
                     zIndex: {
                         '60': '60',
-                        '70': '70'
+                        '70': '70',
+                        'modal': '100'
                     }
                 }
             }
@@ -34,265 +35,298 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         /* 基礎設定 */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
         /* Markdown */
         .markdown-body { font-size: 16px; line-height: 1.7; }
         .markdown-body p { margin-bottom: 0.75em; }
         .markdown-body pre { 
-            background-color: #1e1e1e; 
-            color: #d4d4d4; 
-            padding: 1rem; 
-            border-radius: 0.5rem; 
-            overflow-x: auto; 
-            margin: 1em 0;
-            position: relative;
-            font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
+            background-color: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 0.5rem; 
+            overflow-x: auto; margin: 1em 0; position: relative; font-family: monospace; 
         }
-        .markdown-body code { 
-            background-color: rgba(0,0,0,0.05); 
-            padding: 0.2em 0.4em; 
-            border-radius: 0.25em; 
-            font-family: inherit; 
-        }
+        .markdown-body code { background-color: rgba(0,0,0,0.05); padding: 0.2em 0.4em; border-radius: 0.25em; font-family: inherit; }
         .dark .markdown-body code:not(pre code) { background-color: rgba(255,255,255,0.1); }
 
-        /* 文件卡片 (聊天室內顯示) */
+        /* 文件卡片 */
         .doc-card {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.75rem;
-            padding: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            transition: all 0.2s;
-            cursor: pointer;
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1rem;
+            display: flex; align-items: center; gap: 1rem; transition: all 0.2s; cursor: pointer;
         }
-        .doc-card:hover {
-            background: #f1f5f9;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        .dark .doc-card {
-            background: #1e293b;
-            border-color: #334155;
-        }
-        .dark .doc-card:hover {
-            background: #334155;
-        }
+        .doc-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .dark .doc-card { background: #1e293b; border-color: #334155; }
 
-        /* 彈出式文件紙張 (Modal 內顯示) */
+        /* 文件紙張 */
         .document-paper {
-            background-color: #ffffff;
-            width: 100%;
-            max-width: 210mm; /* A4 */
-            min-height: 297mm;
-            margin: 2rem auto;
-            padding: 25mm 20mm;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0,0,0,0.05);
-            color: #000000; 
-            font-size: 14pt;
-            line-height: 1.8;
-            white-space: pre-wrap;
+            background-color: #ffffff; width: 100%; max-width: 210mm; min-height: 297mm;
+            margin: 2rem auto; padding: 25mm 20mm; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            color: #000000; font-size: 14pt; line-height: 1.8; white-space: pre-wrap;
         }
-        /* 深色模式下，文件依然保持白紙黑字，但稍微降低亮度護眼 */
         .dark .document-paper { filter: brightness(0.9); }
 
-        /* 彈出視窗動畫 */
+        /* 動畫 */
+        .fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .modal-enter { opacity: 0; transform: scale(0.95); }
-        .modal-enter-active { opacity: 1; transform: scale(1); transition: opacity 200ms ease-out, transform 200ms ease-out; }
-        
-        /* Loading */
+        .modal-enter-active { opacity: 1; transform: scale(1); transition: all 200ms ease-out; }
         .typing-dot { animation: typing 1.4s infinite ease-in-out both; }
         .typing-dot:nth-child(1) { animation-delay: -0.32s; }
         .typing-dot:nth-child(2) { animation-delay: -0.16s; }
         @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
 
-        /* Select Customization */
-        select {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 0.2rem center;
-            background-repeat: no-repeat;
-            background-size: 1em 1em;
-            padding-right: 1.5rem;
-            appearance: none;
-        }
+        /* Select & Layout */
+        select { appearance: none; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.2rem center; background-repeat: no-repeat; background-size: 1em 1em; padding-right: 1.5rem; }
+        
+        /* Sidebar Transition */
+        .sidebar-transition { transition: transform 0.3s ease-in-out, width 0.3s ease-in-out; }
     </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 h-screen flex flex-col font-tw-sans text-gray-800 dark:text-gray-100 transition-colors duration-300">
+<body class="bg-gray-50 dark:bg-gray-900 h-screen flex font-tw-sans text-gray-800 dark:text-gray-100 transition-colors duration-300 overflow-hidden">
 
-    <!-- Header -->
-    <header class="bg-white dark:bg-gray-800 shadow-sm z-10 shrink-0">
-        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 w-64 h-full flex-shrink-0 flex flex-col transform -translate-x-full md:translate-x-0 absolute md:relative z-20 sidebar-transition shadow-lg md:shadow-none">
+        <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <h2 class="font-bold text-gray-700 dark:text-gray-200">歷史紀錄</h2>
+            <button onclick="toggleSidebar()" class="md:hidden text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <!-- New Chat Button -->
+        <div class="p-3">
+            <button onclick="startNewChat()" class="w-full flex items-center gap-2 justify-center bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800 p-2.5 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors">
+                <i class="fas fa-plus"></i> 新增對話
+            </button>
+        </div>
+
+        <!-- Chat List -->
+        <div id="session-list" class="flex-1 overflow-y-auto px-3 space-y-1 pb-4">
+            <!-- JS Injected -->
+        </div>
+
+        <!-- Sidebar Footer -->
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+             <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                <i class="fas fa-user-circle"></i>
+                <span id="sidebar-nickname" class="truncate font-medium">使用者</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col h-full relative w-full">
+        <!-- Header -->
+        <header class="bg-white dark:bg-gray-800 shadow-sm z-10 shrink-0 h-14 flex items-center justify-between px-4">
             <div class="flex items-center gap-3">
+                <button onclick="toggleSidebar()" class="md:hidden text-gray-500 p-2"><i class="fas fa-bars"></i></button>
                 <div class="relative group cursor-pointer hover:scale-105 transition-transform">
-                    <img src="https://lh3.googleusercontent.com/a/ACg8ocK0Sd79qNlGdQiGKEoKfuQxqHiVCHuyH4Sw5qFkJfpy4K_J23I=s288-c-no" class="w-9 h-9 rounded-full border-2 border-green-500 object-cover shadow-sm" onerror="this.src='https://api.iconify.design/noto:panda.svg';">
+                    <img src="https://lh3.googleusercontent.com/a/ACg8ocK0Sd79qNlGdQiGKEoKfuQxqHiVCHuyH4Sw5qFkJfpy4K_J23I=s288-c-no" class="w-8 h-8 rounded-full border-2 border-green-500 object-cover" onerror="this.src='https://api.iconify.design/noto:panda.svg';">
                 </div>
-                <h1 class="font-bold text-lg tracking-tight flex items-center gap-2">
-                    PandaPanda AI
-                    <span class="text-[10px] bg-green-100 text-green-800 px-2 py-0.5 rounded-full dark:bg-green-900 dark:text-green-200">Workplace</span>
-                </h1>
+                <h1 class="font-bold text-lg tracking-tight hidden sm:block">PandaPanda AI</h1>
             </div>
             <div class="flex items-center gap-2">
-                <button onclick="toggleTheme()" class="p-2 text-gray-500 hover:text-yellow-500 dark:text-gray-400 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"><i class="fas fa-adjust"></i></button>
-                <button onclick="openSettings()" class="p-2 text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"><i class="fas fa-cog"></i></button>
-                <button onclick="clearChat()" class="p-2 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"><i class="fas fa-trash-alt"></i></button>
+                <button onclick="toggleTheme()" class="p-2 text-gray-500 hover:text-yellow-500 dark:text-gray-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"><i class="fas fa-adjust"></i></button>
+                <button onclick="openSettings()" class="p-2 text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"><i class="fas fa-cog"></i></button>
             </div>
-        </div>
-    </header>
+        </header>
 
-    <!-- Chat Area -->
-    <main id="chat-container" class="flex-1 overflow-y-auto p-4 scroll-smooth bg-gray-100 dark:bg-gray-900">
-        <div class="max-w-5xl mx-auto space-y-6 pb-4 min-h-[50vh]">
-            <!-- Welcome -->
-            <div id="welcome-message" class="flex gap-4 items-start fade-in">
-                <img src="https://lh3.googleusercontent.com/a/ACg8ocK0Sd79qNlGdQiGKEoKfuQxqHiVCHuyH4Sw5qFkJfpy4K_J23I=s288-c-no" class="w-8 h-8 rounded-full border border-gray-200 dark:border-gray-600 flex-shrink-0" onerror="this.src='https://api.iconify.design/noto:panda.svg';">
-                <div class="bg-white dark:bg-gray-800 p-4 rounded-2xl rounded-tl-none shadow-sm border border-gray-200 dark:border-gray-700 max-w-[85%]">
-                    <p class="text-gray-700 dark:text-gray-200">
-                        <span class="text-green-600 font-bold">哈囉！我是 PandaPanda AI 🐼</span><br>
-                        工作站已更新！<br>
-                        📄 <span class="font-bold">文件功能</span>：生成後可點擊「打開文件」在彈窗中閱讀。<br>
-                        💻 <span class="font-bold">程式功能</span>：點擊「執行預覽」會在彈窗中執行程式。<br>
-                        請輸入 API Key 並選擇工具開始！
-                    </p>
-                </div>
-            </div>
-            <div id="chat-history-container" class="space-y-6"></div>
-        </div>
-    </main>
-
-    <!-- Footer Tools -->
-    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 shrink-0">
-        <div class="max-w-4xl mx-auto">
-            <div class="bg-gray-100 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-2xl p-2 focus-within:ring-2 focus-within:ring-green-500/50 focus-within:border-green-500 focus-within:bg-white dark:focus-within:bg-gray-800 transition-all shadow-sm">
-                
-                <div id="image-preview-area" class="hidden px-2 pt-2 pb-0 relative">
-                    <img id="preview-img" class="h-16 w-auto rounded-lg border border-gray-300 dark:border-gray-600 object-cover">
-                    <button onclick="clearImage()" class="absolute top-0 left-14 bg-gray-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-500">×</button>
-                </div>
-
-                <textarea id="user-input" rows="1" placeholder="輸入內容..." class="w-full bg-transparent border-none focus:ring-0 resize-none max-h-40 text-gray-700 dark:text-gray-100 px-3 py-2" oninput="autoResize(this)" onkeydown="handleKeyDown(event)"></textarea>
-
-                <div class="flex items-center justify-between px-1 pt-1 mt-1 gap-2 flex-wrap">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <label class="cursor-pointer p-2 text-gray-400 hover:text-green-600 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-colors">
-                            <i class="fas fa-plus-circle text-lg"></i>
-                            <input type="file" class="hidden" accept="image/*" onchange="handleFileSelect(this)">
-                        </label>
-                        
-                        <div class="relative group">
-                            <div class="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none text-gray-500"><i class="fas fa-toolbox text-xs"></i></div>
-                            <select id="tool-select" onchange="updateModeOptions()" class="pl-7 pr-6 py-1.5 bg-gray-50 dark:bg-gray-600 border-none rounded-lg text-xs font-medium hover:bg-gray-200 dark:hover:bg-gray-500 cursor-pointer focus:ring-0 text-gray-700 dark:text-gray-200">
-                                <option value="general">🐼 一般聊天</option>
-                                <option value="writing">✍️ 寫作文件</option>
-                                <option value="coding">💻 寫程式</option>
-                                <option value="math">🧮 數學/理科</option>
-                                <option value="research">🔍 查資料</option>
-                            </select>
-                        </div>
-
-                        <div class="relative group">
-                            <select id="mode-select" class="pl-3 pr-6 py-1.5 bg-green-50 dark:bg-green-900/30 border-none rounded-lg text-xs font-medium text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/50 cursor-pointer focus:ring-0 transition-colors"></select>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center gap-2">
-                        <select id="model-select" class="pr-6 py-1.5 bg-transparent border-none rounded-lg text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer focus:ring-0 text-right">
-                            <option value="flash">⚡ Flash</option>
-                            <option value="pro">🧠 Pro</option>
-                        </select>
-                        <button id="send-btn" onclick="handleSend()" class="bg-green-600 hover:bg-green-700 text-white rounded-xl p-2 w-9 h-9 flex items-center justify-center shadow-sm disabled:opacity-50"><i class="fas fa-paper-plane text-sm"></i></button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <!-- 預覽彈出視窗 (通用：文件/程式碼) -->
-    <div id="preview-modal" class="fixed inset-0 z-60 hidden">
-        <!-- 背景遮罩 -->
-        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity" onclick="closePreviewModal()"></div>
-        
-        <!-- 視窗內容 -->
-        <div class="absolute inset-4 md:inset-10 bg-gray-100 dark:bg-gray-900 rounded-xl shadow-2xl flex flex-col overflow-hidden transition-transform transform scale-95 opacity-0" id="preview-modal-content">
+        <!-- Main Chat Area -->
+        <main id="main-area" class="flex-1 overflow-y-auto p-4 scroll-smooth bg-gray-100 dark:bg-gray-900 relative">
             
-            <!-- 頂部工具列 -->
+            <!-- Home View (Centered Greeting) -->
+            <div id="home-view" class="absolute inset-0 flex flex-col items-center justify-center p-4 fade-in">
+                <img src="https://lh3.googleusercontent.com/a/ACg8ocK0Sd79qNlGdQiGKEoKfuQxqHiVCHuyH4Sw5qFkJfpy4K_J23I=s288-c-no" class="w-20 h-20 rounded-full border-4 border-white dark:border-gray-700 shadow-xl mb-6" onerror="this.src='https://api.iconify.design/noto:panda.svg';">
+                <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">你好，<span id="home-nickname">使用者</span></h2>
+                <p class="text-gray-500 dark:text-gray-400 text-center max-w-md">
+                    我是 PandaPanda AI。有什麼我可以幫你的嗎？<br>
+                    寫文件、寫程式或解答問題，隨時為您效勞。
+                </p>
+            </div>
+
+            <!-- Chat View -->
+            <div id="chat-container" class="max-w-5xl mx-auto space-y-6 pb-4 hidden min-h-[50vh]">
+                <!-- Dynamic Content -->
+            </div>
+        </main>
+
+        <!-- Footer Tools -->
+        <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 shrink-0 z-10">
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-gray-100 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-2xl p-2 focus-within:ring-2 focus-within:ring-green-500/50 focus-within:border-green-500 focus-within:bg-white dark:focus-within:bg-gray-800 transition-all shadow-sm relative">
+                    
+                    <div id="image-preview-area" class="hidden px-2 pt-2 pb-0 relative">
+                        <img id="preview-img" class="h-16 w-auto rounded-lg border border-gray-300 dark:border-gray-600 object-cover">
+                        <button onclick="clearImage()" class="absolute top-0 left-14 bg-gray-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-500">×</button>
+                    </div>
+
+                    <textarea id="user-input" rows="1" placeholder="輸入內容..." class="w-full bg-transparent border-none focus:ring-0 resize-none max-h-40 text-gray-700 dark:text-gray-100 px-3 py-2" oninput="autoResize(this)" onkeydown="handleKeyDown(event)"></textarea>
+
+                    <div class="flex items-center justify-between px-1 pt-1 mt-1 gap-2 flex-wrap">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <label class="cursor-pointer p-2 text-gray-400 hover:text-green-600 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-colors">
+                                <i class="fas fa-plus-circle text-lg"></i>
+                                <input type="file" class="hidden" accept="image/*" onchange="handleFileSelect(this)">
+                            </label>
+                            
+                            <div class="relative group">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none text-gray-500"><i class="fas fa-toolbox text-xs"></i></div>
+                                <select id="tool-select" onchange="updateModeOptions()" class="pl-7 pr-6 py-1.5 bg-gray-50 dark:bg-gray-600 border-none rounded-lg text-xs font-medium hover:bg-gray-200 dark:hover:bg-gray-500 cursor-pointer focus:ring-0 text-gray-700 dark:text-gray-200">
+                                    <option value="general">🐼 一般聊天</option>
+                                    <option value="writing">✍️ 寫作文件</option>
+                                    <option value="coding">💻 寫程式</option>
+                                    <option value="math">🧮 數學/理科</option>
+                                    <option value="research">🔍 查資料</option>
+                                </select>
+                            </div>
+
+                            <div class="relative group">
+                                <select id="mode-select" class="pl-3 pr-6 py-1.5 bg-green-50 dark:bg-green-900/30 border-none rounded-lg text-xs font-medium text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/50 cursor-pointer focus:ring-0 transition-colors"></select>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <select id="model-select" class="pr-6 py-1.5 bg-transparent border-none rounded-lg text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer focus:ring-0 text-right">
+                                <option value="flash">⚡ Flash</option>
+                                <option value="pro">🧠 Pro</option>
+                            </select>
+                            <button id="send-btn" onclick="handleSend()" class="bg-green-600 hover:bg-green-700 text-white rounded-xl p-2 w-9 h-9 flex items-center justify-center shadow-sm disabled:opacity-50"><i class="fas fa-paper-plane text-sm"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 預覽彈出視窗 -->
+    <div id="preview-modal" class="fixed inset-0 z-70 hidden">
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity" onclick="closePreviewModal()"></div>
+        <div class="absolute inset-4 md:inset-10 bg-gray-100 dark:bg-gray-900 rounded-xl shadow-2xl flex flex-col overflow-hidden transition-transform transform scale-95 opacity-0" id="preview-modal-content">
             <div class="bg-white dark:bg-gray-800 p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center shrink-0">
                 <div class="flex items-center gap-2">
                     <span id="preview-title" class="font-bold text-lg text-gray-800 dark:text-white">預覽</span>
                     <span id="preview-type-badge" class="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300">DOC</span>
                 </div>
-                <div class="flex items-center gap-2">
-                    <!-- 如果是文件，顯示字體切換提示 -->
-                    <span id="preview-font-hint" class="text-xs text-gray-400 hidden md:inline-block">可在設定更改字體</span>
-                    <button onclick="closePreviewModal()" class="bg-gray-200 hover:bg-red-500 hover:text-white text-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-red-500 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
+                <button onclick="closePreviewModal()" class="bg-gray-200 hover:bg-red-500 hover:text-white text-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-red-500 w-8 h-8 rounded-full flex items-center justify-center transition-colors"><i class="fas fa-times"></i></button>
             </div>
-
-            <!-- 內容捲動區 -->
-            <div class="flex-1 overflow-auto p-4 md:p-8" id="preview-body">
-                <!-- 動態注入內容：A4紙 或 iframe -->
-            </div>
+            <div class="flex-1 overflow-auto p-4 md:p-8" id="preview-body"></div>
         </div>
     </div>
 
     <!-- 設定 Modal -->
-    <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 z-70 hidden flex items-center justify-center transition-opacity duration-200">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 transform transition-transform scale-95 opacity-0" id="settings-modal-content">
+    <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 z-modal hidden flex items-center justify-center transition-opacity duration-200">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 transform transition-transform scale-95 opacity-0 max-h-[90vh] overflow-y-auto" id="settings-modal-content">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold text-gray-800 dark:text-white">設定</h2>
                 <button onclick="closeSettings()" class="text-gray-400 hover:text-gray-600">×</button>
             </div>
-            <div class="space-y-4">
+            <div class="space-y-6">
+                <!-- Personal Settings -->
+                <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
+                    <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">個人設定</h3>
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">您的暱稱</label>
+                        <input type="text" id="setting-nickname" placeholder="如何稱呼您？" class="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white outline-none">
+                    </div>
+                </div>
+
+                <!-- System Settings -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">API Key</label>
-                    <input type="password" id="api-key-input" placeholder="Gemini API Key" class="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white outline-none">
+                    <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">系統設定</h3>
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">API Key</label>
+                        <input type="password" id="api-key-input" placeholder="Gemini API Key" class="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white outline-none">
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">文件字體</label>
+                        <select id="font-family-select" class="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white outline-none">
+                            <option value="font-tw-kaiti">標楷體 (正式)</option>
+                            <option value="font-tw-sans">黑體 (現代)</option>
+                            <option value="font-tw-serif">宋體 (文學)</option>
+                        </select>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">文件顯示字體</label>
-                    <select id="font-family-select" class="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white outline-none">
-                        <option value="font-tw-kaiti">標楷體 (正式)</option>
-                        <option value="font-tw-sans">黑體 (現代)</option>
-                        <option value="font-tw-serif">宋體 (文學)</option>
-                    </select>
+
+                <!-- Data & Version -->
+                <div class="flex gap-2 pt-2">
+                    <button onclick="showVersionHistory()" class="flex-1 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-sm hover:bg-blue-100 dark:hover:bg-blue-900/40">版本紀錄</button>
+                    <button onclick="clearChat()" class="flex-1 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm hover:bg-red-100 dark:hover:bg-red-900/40">刪除對話</button>
                 </div>
-                <div class="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <button onclick="exportChat()" class="flex-1 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm">匯出</button>
-                    <label class="flex-1 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm text-center cursor-pointer">
-                        匯入 <input type="file" class="hidden" accept=".json" onchange="importChat(this)">
-                    </label>
-                </div>
-                <button onclick="saveSettingsAndClose()" class="w-full bg-green-600 text-white font-medium py-2.5 rounded-lg">儲存</button>
+
+                <button onclick="saveSettingsAndClose()" class="w-full bg-green-600 text-white font-medium py-2.5 rounded-lg">儲存設定</button>
             </div>
         </div>
     </div>
 
+    <!-- Nickname Modal (Force on start) -->
+    <div id="nickname-modal" class="fixed inset-0 bg-black/80 z-modal hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center">
+            <div class="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🐼</div>
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">歡迎使用 PandaPanda</h2>
+            <p class="text-gray-500 dark:text-gray-400 mb-6">初次見面，請問該如何稱呼您？</p>
+            <input type="text" id="intro-nickname" placeholder="輸入您的暱稱..." class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white outline-none mb-4 text-center text-lg">
+            <button onclick="saveIntroNickname()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition-all transform hover:scale-105">開始使用</button>
+        </div>
+    </div>
+
+    <!-- Version History Modal -->
+    <div id="version-modal" class="fixed inset-0 bg-black bg-opacity-50 z-modal hidden flex items-center justify-center">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
+                <h3 class="text-lg font-bold text-gray-800 dark:text-white">版本紀錄</h3>
+                <button onclick="closeVersionModal()" class="text-gray-400 hover:text-gray-600">×</button>
+            </div>
+            <div class="space-y-4">
+                <div class="relative pl-4 border-l-2 border-green-500">
+                    <div class="text-xs text-green-600 font-bold mb-1">v2.1.0 - 2025/11/22</div>
+                    <p class="text-sm text-gray-700 dark:text-gray-300">1. 新增多對話側邊欄管理。<br>2. 靜默首頁與個人化歡迎。<br>3. 智慧自動命名系統。<br>4. 錯誤處理優化：失敗時不建立存檔。</p>
+                </div>
+                <div class="relative pl-4 border-l-2 border-gray-300 dark:border-gray-600">
+                    <div class="text-xs text-gray-500 font-bold mb-1">v2.0.0</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">引入文件與程式碼彈出式預覽、Word 格式寫作模式、Canvas 執行環境。</p>
+                </div>
+                <div class="relative pl-4 border-l-2 border-gray-300 dark:border-gray-600">
+                    <div class="text-xs text-gray-500 font-bold mb-1">v1.5.0</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">新增字體選擇、A4 文件樣式。</p>
+                </div>
+            </div>
+            <button onclick="closeVersionModal()" class="w-full mt-6 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 py-2 rounded-lg text-sm">關閉</button>
+        </div>
+    </div>
+
     <!-- Error Toast -->
-    <div id="error-toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-2xl shadow-lg transition-all duration-300 opacity-0 pointer-events-none z-70 text-sm"></div>
+    <div id="error-toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-2xl shadow-lg transition-all duration-300 opacity-0 pointer-events-none z-modal text-sm"></div>
 
     <script>
-        // DOM Elements
-        const CHAT_Container = document.getElementById('chat-history-container');
-        const INPUT_Box = document.getElementById('user-input');
-        const TOOL_Select = document.getElementById('tool-select');
-        const MODE_Select = document.getElementById('mode-select');
-        const MODEL_Select = document.getElementById('model-select');
-        const API_KEY_Input = document.getElementById('api-key-input');
-        const FONT_Select = document.getElementById('font-family-select');
-        const SETTINGS_Modal = document.getElementById('settings-modal');
-        const PREVIEW_Modal = document.getElementById('preview-modal');
-        const PREVIEW_Body = document.getElementById('preview-body');
-        
-        let chatHistory = [];
-        let currentImageBase64 = null;
-        let userFontPreference = 'font-tw-kaiti';
+        // --- State Management ---
+        let sessions = []; // [{id, title, messages:[], timestamp}]
+        let currentSessionId = null; 
+        let currentImageBase64 = null; // Added declaration here
+        let userConfig = {
+            apiKey: '',
+            nickname: '',
+            theme: 'light',
+            font: 'font-tw-kaiti'
+        };
+
+        // --- DOM Elements ---
+        const ELEMENTS = {
+            mainArea: document.getElementById('main-area'),
+            homeView: document.getElementById('home-view'),
+            chatContainer: document.getElementById('chat-container'),
+            sidebar: document.getElementById('sidebar'),
+            sessionList: document.getElementById('session-list'),
+            inputBox: document.getElementById('user-input'),
+            sendBtn: document.getElementById('send-btn'),
+            homeNickname: document.getElementById('home-nickname'),
+            sidebarNickname: document.getElementById('sidebar-nickname'),
+            settingNickname: document.getElementById('setting-nickname'),
+            apiKeyInput: document.getElementById('api-key-input'),
+            fontSelect: document.getElementById('font-family-select'),
+            toolSelect: document.getElementById('tool-select'),
+            modeSelect: document.getElementById('mode-select'),
+            modelSelect: document.getElementById('model-select'),
+            errorToast: document.getElementById('error-toast')
+        };
 
         const TOOL_CONFIG = {
             'general': { label: '一般', modes: [{value:'chat', label:'💬 閒聊'}, {value:'summarize', label:'📝 摘要'}] },
@@ -302,305 +336,426 @@
             'research': { label: '研究', modes: [{value:'search', label:'🔍 查資料'}] }
         };
 
+        // --- Initialization ---
         window.addEventListener('DOMContentLoaded', () => {
-            loadSettings();
+            loadUserConfig();
+            loadSessions();
             updateModeOptions();
-            renderChatUI();
+            
+            // Check Nickname
+            if (!userConfig.nickname) {
+                document.getElementById('nickname-modal').classList.remove('hidden');
+                document.getElementById('intro-nickname').focus();
+            } else {
+                updateNicknameDisplay();
+                renderHomeView();
+            }
         });
 
-        function updateModeOptions() {
-            const tool = TOOL_Select.value;
-            const config = TOOL_CONFIG[tool];
-            MODE_Select.innerHTML = '';
-            config.modes.forEach(m => {
-                const opt = document.createElement('option');
-                opt.value = m.value;
-                opt.textContent = m.label;
-                MODE_Select.appendChild(opt);
+        // --- Config & Session Logic ---
+        function loadUserConfig() {
+            userConfig.apiKey = localStorage.getItem('panda_api_key') || '';
+            userConfig.nickname = localStorage.getItem('panda_nickname') || '';
+            userConfig.theme = localStorage.getItem('panda_theme') || 'light';
+            userConfig.font = localStorage.getItem('panda_font_pref') || 'font-tw-kaiti';
+
+            // Apply
+            if (userConfig.theme === 'dark') document.documentElement.classList.add('dark');
+            ELEMENTS.apiKeyInput.value = userConfig.apiKey;
+            ELEMENTS.settingNickname.value = userConfig.nickname;
+            ELEMENTS.fontSelect.value = userConfig.font;
+        }
+
+        function saveUserConfig() {
+            localStorage.setItem('panda_api_key', userConfig.apiKey);
+            localStorage.setItem('panda_nickname', userConfig.nickname);
+            localStorage.setItem('panda_theme', userConfig.theme);
+            localStorage.setItem('panda_font_pref', userConfig.font);
+            updateNicknameDisplay();
+        }
+
+        function loadSessions() {
+            try {
+                sessions = JSON.parse(localStorage.getItem('panda_sessions')) || [];
+                // Sort by timestamp desc
+                sessions.sort((a, b) => b.timestamp - a.timestamp);
+                renderSessionList();
+            } catch { sessions = []; }
+        }
+
+        function saveSessions() {
+            localStorage.setItem('panda_sessions', JSON.stringify(sessions));
+            renderSessionList();
+        }
+
+        function saveIntroNickname() {
+            const val = document.getElementById('intro-nickname').value.trim();
+            if(!val) return;
+            userConfig.nickname = val;
+            saveUserConfig();
+            document.getElementById('nickname-modal').classList.add('hidden');
+            renderHomeView();
+        }
+
+        function updateNicknameDisplay() {
+            ELEMENTS.homeNickname.innerText = userConfig.nickname || '使用者';
+            ELEMENTS.sidebarNickname.innerText = userConfig.nickname || '使用者';
+            ELEMENTS.settingNickname.value = userConfig.nickname || '';
+        }
+
+        // --- UI Rendering ---
+        function renderHomeView() {
+            currentSessionId = null;
+            ELEMENTS.homeView.classList.remove('hidden');
+            ELEMENTS.chatContainer.classList.add('hidden');
+            ELEMENTS.chatContainer.innerHTML = '';
+            // Reset Sidebar selection style
+            document.querySelectorAll('.session-item').forEach(el => el.classList.remove('bg-gray-100', 'dark:bg-gray-700'));
+        }
+
+        function renderChatView(session) {
+            currentSessionId = session.id;
+            ELEMENTS.homeView.classList.add('hidden');
+            ELEMENTS.chatContainer.classList.remove('hidden');
+            ELEMENTS.chatContainer.innerHTML = '';
+            
+            session.messages.forEach(msg => {
+                ELEMENTS.chatContainer.appendChild(createMessageElement(msg));
+            });
+            scrollToBottom();
+            
+            // Update Sidebar active state
+            renderSessionList();
+        }
+
+        function renderSessionList() {
+            ELEMENTS.sessionList.innerHTML = '';
+            sessions.forEach(session => {
+                const isActive = session.id === currentSessionId;
+                const div = document.createElement('div');
+                div.className = `session-item p-2.5 rounded-lg cursor-pointer flex items-center gap-2 text-sm truncate transition-colors group relative ${isActive ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`;
+                div.innerHTML = `
+                    <i class="far fa-comment-alt shrink-0"></i>
+                    <span class="truncate flex-1">${session.title}</span>
+                    <button onclick="deleteSession('${session.id}', event)" class="opacity-0 group-hover:opacity-100 hover:text-red-500 px-1"><i class="fas fa-trash"></i></button>
+                `;
+                div.onclick = (e) => { if(!e.target.closest('button')) loadSession(session.id); };
+                ELEMENTS.sessionList.appendChild(div);
             });
         }
 
-        function handleFileSelect(input) {
-            const file = input.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = e => {
-                currentImageBase64 = e.target.result;
-                document.getElementById('image-preview-area').classList.remove('hidden');
-                document.getElementById('preview-img').src = currentImageBase64;
-            };
-            reader.readAsDataURL(file);
-            input.value = '';
-        }
-        function clearImage() {
-            currentImageBase64 = null;
-            document.getElementById('image-preview-area').classList.add('hidden');
+        function startNewChat() {
+            renderHomeView();
+            if(window.innerWidth < 768) toggleSidebar(); // Close sidebar on mobile
         }
 
-        function getSystemPrompt(tool, mode) {
-            let prompt = `你現在是 PandaPanda AI。
-最高原則：
-1. 寫作模式(writing)下，嚴格禁止使用Markdown粗體(**)和分隔線(---)。
-2. 寫程式時，請給出「完整程式碼」，不可跳過或省略。
-3. 寫程式時，除非使用者要求修改，否則請根據需求直接給出最佳解。
-4. 只能用繁體中文回答。
-5. 你是PandaPanda，不是Gemini。`;
-
-            if (tool === 'writing' && mode === 'write_doc') {
-                prompt += `\n[模式：文件撰寫] 請產出像Word一樣的正式文件。標題直接寫出，不加#。使用縮排和國字編號(一、二、1.)。`;
-            } else if (tool === 'coding') {
-                if (mode === 'web_canvas') {
-                    prompt += `\n[模式：Web/Canvas] 使用者想要網頁或Canvas特效。
-請提供一個「單一 HTML 檔案」，包含所有 CSS 和 JS。
-務必在 HTML 中使用 <canvas> 標籤並用 JS 繪圖。
-程式碼必須完整可執行。`;
-                } else {
-                    prompt += `\n[模式：寫程式] 請提供完整、可執行的程式碼。`;
-                }
+        function loadSession(id) {
+            const session = sessions.find(s => s.id === id);
+            if (session) {
+                renderChatView(session);
+                if(window.innerWidth < 768) toggleSidebar();
             }
-            return prompt;
         }
 
-        function renderChatUI() {
-            CHAT_Container.innerHTML = '';
-            if (chatHistory.length === 0) document.getElementById('welcome-message').classList.remove('hidden');
-            else document.getElementById('welcome-message').classList.add('hidden');
-
-            chatHistory.forEach(msg => CHAT_Container.appendChild(createMessageElement(msg)));
-            document.getElementById('chat-container').scrollTo({top: 99999, behavior: 'smooth'});
+        function deleteSession(id, e) {
+            if(e) e.stopPropagation();
+            if(!confirm("確定刪除此對話？")) return;
+            sessions = sessions.filter(s => s.id !== id);
+            saveSessions();
+            if (currentSessionId === id) startNewChat();
         }
 
+        function clearChat() {
+             if (currentSessionId) {
+                deleteSession(currentSessionId);
+             } else {
+                 // Clear all
+                 if(!confirm("確定刪除所有歷史紀錄？")) return;
+                 sessions = [];
+                 saveSessions();
+                 startNewChat();
+             }
+             closeSettings();
+        }
+
+        // --- Core Chat Logic ---
+        async function handleSend() {
+            const apiKey = userConfig.apiKey;
+            if (!apiKey) {
+                document.getElementById('settings-modal').classList.remove('hidden');
+                setTimeout(()=>document.getElementById('settings-modal-content').classList.remove('scale-95','opacity-0'),10);
+                showToast("請先輸入 API Key");
+                return;
+            }
+
+            const text = ELEMENTS.inputBox.value.trim();
+            if (!text && !currentImageBase64) return;
+
+            const tool = ELEMENTS.toolSelect.value;
+            const mode = ELEMENTS.modeSelect.value;
+            const modelLevel = document.getElementById('model-select').value;
+            
+            // UI Update - Show User Message
+            // If in Home View, switch to Chat View UI structure (but don't create session yet)
+            if (!currentSessionId) {
+                ELEMENTS.homeView.classList.add('hidden');
+                ELEMENTS.chatContainer.classList.remove('hidden');
+            }
+
+            const userMsg = { sender: 'user', text: text, image: currentImageBase64 };
+            ELEMENTS.chatContainer.appendChild(createMessageElement(userMsg));
+            scrollToBottom();
+
+            // Prepare Input Reset
+            const imgToSend = currentImageBase64;
+            clearImage();
+            ELEMENTS.inputBox.value = '';
+            ELEMENTS.sendBtn.disabled = true;
+
+            // Loading Indicator
+            const loading = document.createElement('div');
+            loading.id = 'loading-indicator';
+            loading.innerHTML = `<div class="flex gap-4 items-start fade-in"><img src="https://lh3.googleusercontent.com/a/ACg8ocK0Sd79qNlGdQiGKEoKfuQxqHiVCHuyH4Sw5qFkJfpy4K_J23I=s288-c-no" class="w-8 h-8 rounded-full mt-1 border border-gray-200"><div class="bg-white dark:bg-gray-800 p-4 rounded-2xl rounded-tl-none shadow-sm"><div class="flex gap-1"><div class="w-2 h-2 bg-gray-400 rounded-full typing-dot"></div><div class="w-2 h-2 bg-gray-400 rounded-full typing-dot"></div><div class="w-2 h-2 bg-gray-400 rounded-full typing-dot"></div></div></div></div>`;
+            ELEMENTS.chatContainer.appendChild(loading);
+            scrollToBottom();
+
+            try {
+                // Determine History context
+                let historyContext = [];
+                if (currentSessionId) {
+                    const session = sessions.find(s => s.id === currentSessionId);
+                    if(session) historyContext = session.messages.map(m => ({ role: m.sender==='user'?'user':'model', parts: [{text: m.text}] }));
+                }
+
+                // Construct Prompt
+                const systemPrompt = getSystemPrompt(tool, mode);
+                const contents = [
+                    { role: "user", parts: [{ text: systemPrompt }] },
+                    { role: "model", parts: [{ text: "收到，我是PandaPanda。" }] },
+                    ...historyContext
+                ];
+                
+                const parts = [{ text: text }];
+                if (imgToSend) {
+                     parts.push({ inline_data: { mime_type: imgToSend.split(';')[0].split(':')[1], data: imgToSend.split(',')[1] } });
+                }
+                contents.push({ role: "user", parts: parts });
+
+                // API Call
+                const responseText = await callGeminiAPI(apiKey, contents, modelLevel);
+
+                // Success!
+                loading.remove();
+                const aiMsg = { sender: 'panda', text: responseText, tool: tool, mode: mode };
+                ELEMENTS.chatContainer.appendChild(createMessageElement(aiMsg));
+                scrollToBottom();
+
+                // Manage Session Persistence
+                if (!currentSessionId) {
+                    // Create New Session
+                    const newId = Date.now().toString();
+                    const newSession = {
+                        id: newId,
+                        title: '新對話...', // Temporary title
+                        messages: [userMsg, aiMsg],
+                        timestamp: Date.now()
+                    };
+                    sessions.unshift(newSession);
+                    currentSessionId = newId;
+                    saveSessions(); // Save first
+                    
+                    // Auto-naming in background
+                    generateAutoTitle(apiKey, text, responseText, newId);
+                } else {
+                    // Update Existing Session
+                    const session = sessions.find(s => s.id === currentSessionId);
+                    if (session) {
+                        session.messages.push(userMsg);
+                        session.messages.push(aiMsg);
+                        session.timestamp = Date.now();
+                        // Re-sort sessions
+                        sessions.sort((a, b) => b.timestamp - a.timestamp);
+                        saveSessions();
+                    }
+                }
+
+            } catch (error) {
+                loading.remove();
+                showToast("錯誤: " + error.message);
+                
+                // If it was a new chat attempt and failed, remove the user message from UI and reset view if empty
+                if (!currentSessionId) {
+                   // Remove the user message we just added
+                   ELEMENTS.chatContainer.innerHTML = '';
+                   renderHomeView();
+                } else {
+                   // Just remove the last user message from UI to keep sync? 
+                   // Ideally keep it but mark as failed. For simplicity, we just leave UI as is but don't save to history.
+                   // To adhere to "Error -> Delete/Reset" rule for new chats strictly:
+                   // The above (!currentSessionId) block handles the "Delete" part for new chats.
+                }
+            } finally {
+                ELEMENTS.sendBtn.disabled = false;
+            }
+        }
+
+        async function callGeminiAPI(key, contents, level) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${key}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: contents,
+                    generationConfig: { temperature: level === 'pro' ? 0.7 : 0.9, maxOutputTokens: 8000 }
+                })
+            });
+            if (!response.ok) throw new Error((await response.json()).error?.message || "API Error");
+            const data = await response.json();
+            return data.candidates?.[0]?.content?.parts?.[0]?.text || "無回應";
+        }
+
+        // --- Auto Naming Logic ---
+        async function generateAutoTitle(apiKey, userText, aiText, sessionId) {
+            try {
+                const prompt = `請根據以下對話內容，生成一個4到8個繁體中文字的簡短標題。不要包含引號或其他符號，只要標題文字。\n使用者：${userText.substring(0,50)}\nAI：${aiText.substring(0,50)}`;
+                const contents = [{ role: "user", parts: [{ text: prompt }] }];
+                const title = await callGeminiAPI(apiKey, contents, 'flash');
+                
+                const session = sessions.find(s => s.id === sessionId);
+                if (session) {
+                    session.title = title.replace(/\n/g, '').trim().substring(0, 15);
+                    saveSessions();
+                }
+            } catch (e) { console.error("Auto naming failed", e); }
+        }
+
+        // --- Helpers & UI Components ---
         function createMessageElement(msg) {
             const isUser = msg.sender === 'user';
             const wrapper = document.createElement('div');
             wrapper.className = `flex gap-4 items-start ${isUser ? 'flex-row-reverse' : ''} fade-in`;
 
             const avatar = document.createElement('img');
-            avatar.className = "w-8 h-8 rounded-full border border-gray-200 dark:border-gray-600 mt-1";
+            avatar.className = "w-8 h-8 rounded-full border border-gray-200 dark:border-gray-600 mt-1 object-cover";
             avatar.src = isUser ? "https://api.iconify.design/carbon:user-avatar-filled.svg?color=%234b5563" : "https://lh3.googleusercontent.com/a/ACg8ocK0Sd79qNlGdQiGKEoKfuQxqHiVCHuyH4Sw5qFkJfpy4K_J23I=s288-c-no";
             if(!isUser) avatar.onerror = () => avatar.src='https://api.iconify.design/noto:panda.svg';
 
-            // 訊息內容容器
             const contentDiv = document.createElement('div');
-            
-            // 判斷：是否為文件模式
             if (!isUser && msg.tool === 'writing' && msg.mode === 'write_doc') {
-                // 文件模式：顯示文件卡片 (點擊打開彈窗)
-                contentDiv.className = ""; // Reset default
                 contentDiv.innerHTML = `
                     <div class="doc-card" onclick="openPreviewModal('doc', \`${encodeURIComponent(msg.text)}\`)">
-                        <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-2xl shrink-0">
-                            <i class="fas fa-file-word"></i>
-                        </div>
-                        <div>
-                            <div class="font-bold text-gray-800 dark:text-gray-200">文件已生成</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">點擊開啟全螢幕閱讀模式</div>
-                        </div>
-                        <i class="fas fa-external-link-alt text-gray-400 ml-auto"></i>
-                    </div>
-                `;
+                        <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-2xl shrink-0"><i class="fas fa-file-word"></i></div>
+                        <div><div class="font-bold text-gray-800 dark:text-gray-200">文件已生成</div><div class="text-xs text-gray-500 dark:text-gray-400">點擊閱讀</div></div>
+                    </div>`;
             } else {
-                // 一般對話模式
                 contentDiv.className = `p-4 rounded-2xl shadow-sm border max-w-[90%] md:max-w-[80%] overflow-hidden ${isUser ? 'bg-green-600 text-white rounded-tr-none' : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-tl-none border-gray-200 dark:border-gray-700 markdown-body'}`;
-                
-                if (msg.image) {
-                    const img = document.createElement('img');
-                    img.src = msg.image;
-                    img.className = "max-w-full h-auto rounded-lg mb-2 max-h-64 object-contain";
-                    contentDiv.appendChild(img);
-                }
-
+                if (msg.image) contentDiv.innerHTML += `<img src="${msg.image}" class="max-w-full h-auto rounded-lg mb-2 max-h-64 object-contain">`;
                 const textDiv = document.createElement('div');
-                if (isUser) {
-                    textDiv.innerText = msg.text;
-                } else {
+                if (isUser) textDiv.innerText = msg.text;
+                else {
                     textDiv.innerHTML = marked.parse(msg.text);
-                    if (msg.tool === 'coding' && msg.mode === 'web_canvas') {
-                        injectCodePreviews(textDiv);
-                    }
+                    if (msg.tool === 'coding' && msg.mode === 'web_canvas') injectCodePreviews(textDiv);
                 }
                 contentDiv.appendChild(textDiv);
             }
-
             wrapper.appendChild(avatar);
             wrapper.appendChild(contentDiv);
             return wrapper;
         }
 
-        // --- 預覽彈出視窗邏輯 ---
+        // Preview Logic (Copied from previous version)
         function openPreviewModal(type, content) {
-            PREVIEW_Modal.classList.remove('hidden');
-            const modalContent = document.getElementById('preview-modal-content');
+            const modal = document.getElementById('preview-modal');
+            const body = document.getElementById('preview-body');
+            const title = document.getElementById('preview-title');
+            const badge = document.getElementById('preview-type-badge');
             
-            // Reset Content
-            PREVIEW_Body.innerHTML = '';
+            modal.classList.remove('hidden');
+            body.innerHTML = '';
             
             if (type === 'doc') {
-                // 文件模式
-                document.getElementById('preview-title').innerText = "文件檢視";
-                document.getElementById('preview-type-badge').innerText = "DOC";
-                document.getElementById('preview-type-badge').className = "text-xs px-2 py-1 rounded bg-blue-100 text-blue-600";
-                document.getElementById('preview-font-hint').classList.remove('hidden');
-
+                title.innerText = "文件檢視";
+                badge.innerText = "DOC";
                 const paper = document.createElement('div');
-                paper.className = `document-paper shadow-lg ${userFontPreference}`; // 套用設定字體
-                paper.innerText = decodeURIComponent(content); // 寫入純文字
-                PREVIEW_Body.appendChild(paper);
-                PREVIEW_Body.classList.remove('bg-gray-900'); // 確保背景適合文件閱讀
-                PREVIEW_Body.classList.add('bg-gray-100', 'dark:bg-gray-900');
-
-            } else if (type === 'code') {
-                // 程式碼預覽模式
-                document.getElementById('preview-title').innerText = "程式執行預覽";
-                document.getElementById('preview-type-badge').innerText = "RUN";
-                document.getElementById('preview-type-badge').className = "text-xs px-2 py-1 rounded bg-green-100 text-green-600";
-                document.getElementById('preview-font-hint').classList.add('hidden');
-
+                paper.className = `document-paper shadow-lg ${userConfig.font}`;
+                paper.innerText = decodeURIComponent(content);
+                body.appendChild(paper);
+            } else {
+                title.innerText = "程式執行";
+                badge.innerText = "RUN";
                 const iframe = document.createElement('iframe');
-                iframe.className = "w-full h-full bg-white border border-gray-200 rounded-lg";
-                const blob = new Blob([decodeURIComponent(content)], {type: 'text/html'});
-                iframe.src = URL.createObjectURL(blob);
-                PREVIEW_Body.innerHTML = ''; // clear
-                PREVIEW_Body.appendChild(iframe);
+                iframe.className = "w-full h-full bg-white border rounded-lg";
+                iframe.src = URL.createObjectURL(new Blob([decodeURIComponent(content)], {type: 'text/html'}));
+                body.appendChild(iframe);
             }
-
-            // 動畫顯示
-            setTimeout(() => {
-                modalContent.classList.remove('scale-95', 'opacity-0');
-                modalContent.classList.add('scale-100', 'opacity-100');
-            }, 10);
+            setTimeout(() => document.getElementById('preview-modal-content').classList.remove('scale-95','opacity-0'),10);
         }
-
         function closePreviewModal() {
-            const modalContent = document.getElementById('preview-modal-content');
-            modalContent.classList.remove('scale-100', 'opacity-100');
-            modalContent.classList.add('scale-95', 'opacity-0');
-            setTimeout(() => PREVIEW_Modal.classList.add('hidden'), 200);
+            document.getElementById('preview-modal-content').classList.add('scale-95','opacity-0');
+            setTimeout(() => document.getElementById('preview-modal').classList.add('hidden'), 200);
         }
-
-        function injectCodePreviews(container) {
-            const codeBlocks = container.querySelectorAll('pre code');
-            codeBlocks.forEach(block => {
-                if (block.className.includes('html') || block.className.includes('xml')) {
-                    const code = block.innerText;
-                    const pre = block.parentElement;
-                    
+        function injectCodePreviews(el) {
+            el.querySelectorAll('pre code').forEach(block => {
+                if(block.className.includes('html') || block.className.includes('xml')) {
                     const btn = document.createElement('button');
-                    btn.className = "absolute top-2 right-2 bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1.5 rounded-full transition-colors shadow-sm z-10 flex items-center gap-1";
-                    btn.innerHTML = '<i class="fas fa-play"></i> 執行預覽';
-                    // 點擊後打開彈窗
-                    btn.onclick = () => openPreviewModal('code', encodeURIComponent(code));
-                    
-                    pre.style.position = 'relative';
-                    pre.appendChild(btn);
+                    btn.className = "absolute top-2 right-2 bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1 rounded-full z-10";
+                    btn.innerHTML = '<i class="fas fa-play"></i>';
+                    btn.onclick = () => openPreviewModal('code', encodeURIComponent(block.innerText));
+                    block.parentElement.style.position = 'relative';
+                    block.parentElement.appendChild(btn);
                 }
             });
         }
 
-        // --- 發送 ---
-        async function handleSend() {
-            const apiKey = localStorage.getItem('panda_api_key');
-            if (!apiKey) { openSettings(); return; }
-            const text = INPUT_Box.value.trim();
-            if (!text && !currentImageBase64) return;
-
-            const tool = TOOL_Select.value;
-            const mode = MODE_Select.value;
-            const modelLevel = MODEL_Select.value;
-
-            chatHistory.push({ sender: 'user', text: text, image: currentImageBase64 });
-            renderChatUI();
-
-            const imgToSend = currentImageBase64;
-            clearImage();
-            INPUT_Box.value = '';
-            document.getElementById('send-btn').disabled = true;
-
-            const loading = document.createElement('div');
-            loading.id = 'loading-indicator';
-            loading.innerHTML = `<div class="flex gap-4 items-start fade-in"><img src="https://lh3.googleusercontent.com/a/ACg8ocK0Sd79qNlGdQiGKEoKfuQxqHiVCHuyH4Sw5qFkJfpy4K_J23I=s288-c-no" class="w-8 h-8 rounded-full mt-1"><div class="bg-white dark:bg-gray-800 p-4 rounded-2xl rounded-tl-none shadow-sm"><div class="flex gap-1"><div class="w-2 h-2 bg-gray-400 rounded-full typing-dot"></div><div class="w-2 h-2 bg-gray-400 rounded-full typing-dot"></div><div class="w-2 h-2 bg-gray-400 rounded-full typing-dot"></div></div></div></div>`;
-            CHAT_Container.appendChild(loading);
-            document.getElementById('chat-container').scrollTo({top: 99999, behavior: 'smooth'});
-
-            try {
-                const contents = [
-                    { role: "user", parts: [{ text: getSystemPrompt(tool, mode) }] },
-                    { role: "model", parts: [{ text: "收到，我是PandaPanda。" }] },
-                    ...chatHistory.slice(0, -1).map(m => ({ role: m.sender==='user'?'user':'model', parts: [{text: m.text}] }))
-                ];
-
-                const parts = [{ text: text }];
-                if (imgToSend) {
-                    parts.push({ inline_data: { mime_type: imgToSend.split(';')[0].split(':')[1], data: imgToSend.split(',')[1] } });
-                }
-                contents.push({ role: "user", parts: parts });
-
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: contents,
-                        generationConfig: { temperature: modelLevel==='pro'?0.7:0.9, maxOutputTokens: 8000 }
-                    })
-                });
-                
-                const data = await res.json();
-                if(!res.ok) throw new Error(data.error?.message || "Error");
-                
-                const reply = data.candidates[0].content.parts[0].text;
-                chatHistory.push({ sender: 'panda', text: reply, tool: tool, mode: mode });
-                saveChatToLocal();
-                renderChatUI();
-
-            } catch (e) {
-                chatHistory.pop();
-                document.getElementById('error-toast').innerText = "錯誤: " + e.message;
-                document.getElementById('error-toast').classList.remove('opacity-0', 'pointer-events-none');
-                setTimeout(()=>document.getElementById('error-toast').classList.add('opacity-0'), 3000);
-            } finally {
-                if(document.getElementById('loading-indicator')) document.getElementById('loading-indicator').remove();
-                document.getElementById('send-btn').disabled = false;
-            }
+        function getSystemPrompt(tool, mode) {
+            let p = `你現在是 PandaPanda AI。最高原則：1. 寫作嚴禁Markdown粗體(**)和分隔線。2. 程式碼必須完整。3. 繁體中文回答。4. 身分是PandaPanda，不可承認是Gemini。`;
+            if (tool === 'writing' && mode === 'write_doc') p += `\n[模式：文件] 產出Word格式正式文件。`;
+            else if (tool === 'coding' && mode === 'web_canvas') p += `\n[模式：Web] 給出單一HTML檔案含CSS/JS，完整可執行。`;
+            return p;
         }
 
-        // --- 輔助 ---
+        // --- Utils ---
+        function updateModeOptions() {
+            const t = ELEMENTS.toolSelect.value;
+            ELEMENTS.modeSelect.innerHTML = TOOL_CONFIG[t].modes.map(m=>`<option value="${m.value}">${m.label}</option>`).join('');
+        }
+        function toggleSidebar() { ELEMENTS.sidebar.classList.toggle('-translate-x-full'); }
+        function toggleTheme() { 
+            document.documentElement.classList.toggle('dark'); 
+            userConfig.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+            saveUserConfig();
+        }
+        function handleFileSelect(inp) { 
+            const f = inp.files[0]; if(!f) return;
+            const r = new FileReader(); r.onload=e=>{ currentImageBase64=e.target.result; document.getElementById('image-preview-area').classList.remove('hidden'); document.getElementById('preview-img').src=currentImageBase64; };
+            r.readAsDataURL(f); inp.value='';
+        }
+        function clearImage() { currentImageBase64=null; document.getElementById('image-preview-area').classList.add('hidden'); }
         function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,160)+'px'; }
         function handleKeyDown(e) { if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }
-        function openSettings() { SETTINGS_Modal.classList.remove('hidden'); setTimeout(()=>document.getElementById('settings-modal-content').classList.remove('scale-95','opacity-0'),10); }
-        function closeSettings() { document.getElementById('settings-modal-content').classList.add('scale-95','opacity-0'); setTimeout(()=>SETTINGS_Modal.classList.add('hidden'),200); }
+        function showToast(m) { ELEMENTS.errorToast.innerText=m; ELEMENTS.errorToast.classList.remove('opacity-0','pointer-events-none'); setTimeout(()=>ELEMENTS.errorToast.classList.add('opacity-0'),3000); }
+        function scrollToBottom() { ELEMENTS.chatContainer.scrollTo({top:99999, behavior:'smooth'}); }
         
-        function loadSettings() {
-            API_KEY_Input.value = localStorage.getItem('panda_api_key')||'';
-            userFontPreference = localStorage.getItem('panda_font_pref') || 'font-tw-kaiti';
-            FONT_Select.value = userFontPreference;
-            if(localStorage.getItem('panda_theme')==='dark') document.documentElement.classList.add('dark');
+        // Modal Controls
+        function openSettings() { 
+            document.getElementById('settings-modal').classList.remove('hidden');
+            // Sync current values
+            ELEMENTS.settingNickname.value = userConfig.nickname;
+            ELEMENTS.apiKeyInput.value = userConfig.apiKey;
+            ELEMENTS.fontSelect.value = userConfig.font;
+            setTimeout(()=>document.getElementById('settings-modal-content').classList.remove('scale-95','opacity-0'),10);
         }
+        function closeSettings() { document.getElementById('settings-modal-content').classList.add('scale-95','opacity-0'); setTimeout(()=>document.getElementById('settings-modal').classList.add('hidden'),200); }
         function saveSettingsAndClose() {
-            localStorage.setItem('panda_api_key', API_KEY_Input.value);
-            userFontPreference = FONT_Select.value;
-            localStorage.setItem('panda_font_pref', userFontPreference);
+            userConfig.nickname = ELEMENTS.settingNickname.value;
+            userConfig.apiKey = ELEMENTS.apiKeyInput.value;
+            userConfig.font = ELEMENTS.fontSelect.value;
+            saveUserConfig();
             closeSettings();
-            renderChatUI(); 
+            showToast("設定已儲存");
         }
-        function toggleTheme() {
-            document.documentElement.classList.toggle('dark');
-            localStorage.setItem('panda_theme', document.documentElement.classList.contains('dark')?'dark':'light');
-        }
-        
-        function loadChatHistory() { try { chatHistory = JSON.parse(localStorage.getItem('panda_chat_history')) || []; } catch{ chatHistory=[]; } }
-        function saveChatToLocal() { localStorage.setItem('panda_chat_history', JSON.stringify(chatHistory)); }
-        function clearChat() { if(confirm('清除紀錄？')) { chatHistory=[]; saveChatToLocal(); renderChatUI(); } }
-        function exportChat() {
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(new Blob([JSON.stringify(chatHistory)],{type:'application/json'}));
-            a.download = 'panda_chat.json';
-            a.click();
-        }
-        function importChat(input) {
-            const r = new FileReader();
-            r.onload = e => { try{ chatHistory=JSON.parse(e.target.result); saveChatToLocal(); renderChatUI(); }catch{} };
-            r.readAsText(input.files[0]);
-        }
+        function showVersionHistory() { document.getElementById('version-modal').classList.remove('hidden'); }
+        function closeVersionModal() { document.getElementById('version-modal').classList.add('hidden'); }
     </script>
 </body>
 </html>
